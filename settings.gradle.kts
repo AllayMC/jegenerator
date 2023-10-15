@@ -9,6 +9,6 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "0.7.0"
 }
 
-rootProject.name = "forktest"
+rootProject.name = "jegenerator"
 
-include("forktest-api", "forktest-server")
+include("jegenerator-api", "jegenerator-server")
