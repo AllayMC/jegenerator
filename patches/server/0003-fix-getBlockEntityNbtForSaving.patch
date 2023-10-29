@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: CoolLoong <1542536763@qq.com>
+Date: Sun, 29 Oct 2023 22:06:07 +0800
+Subject: [PATCH] fix getBlockEntityNbtForSaving
+
+
+diff --git a/src/main/java/cn/allay/jegenerator/utils/ChunkUtils.java b/src/main/java/cn/allay/jegenerator/utils/ChunkUtils.java
+index af56c111a968fcaad002ec100dfb3db058d05c69..a94e6b1dc73da964cfc369dc8db8893246615be8 100644
+--- a/src/main/java/cn/allay/jegenerator/utils/ChunkUtils.java
++++ b/src/main/java/cn/allay/jegenerator/utils/ChunkUtils.java
+@@ -35,9 +35,9 @@ public class ChunkUtils {
+                     int biome = BIOME_MAPPINGS.getOrDefault(id, 1);
+                     output.setBiome(x, y, z, VanillaBiomeId.fromId(biome));
+ 
+-                    CompoundTag blockEntityNBT = input.getBlockEntityNbtForSaving(new BlockPos(x, y, z));
++                    CompoundTag blockEntityNBT = input.getBlockEntityNbtForSaving(new BlockPos((input.locX << 4) + x, y, (input.locZ << 4) + z));
+                     //todo translate blockEntity NBT and block
+-                    if(blockEntityNBT!=null){
++                    if (blockEntityNBT != null) {
+                         continue;
+                     }
+ 
