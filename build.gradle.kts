@@ -13,6 +13,7 @@ val paperMavenPublicUrl = "https://repo.papermc.io/repository/maven-public/"
 
 repositories {
     mavenCentral()
+    maven("https://jitpack.io")
     maven(paperMavenPublicUrl) {
         content { onlyForConfigurations(configurations.paperclip.name) }
     }
@@ -21,12 +22,17 @@ repositories {
 dependencies {
     remapper("net.fabricmc:tiny-remapper:0.8.6:fat") // Must be kept in sync with upstream
     decompiler("net.minecraftforge:forgeflower:2.0.627.2") // Must be kept in sync with upstream
-    paperclip("io.papermc:paperclip:3.0.3") // You probably want this to be kept in sync with upstream
+    paperclip(files("C:\\Users\\wyd\\IdeaProjects\\JEGeneratorLoader\\build\\libs\\paperclip-3.0.4-SNAPSHOT.jar")) // You probably want this to be kept in sync with upstream
 }
 
 allprojects {
     apply(plugin = "java")
     apply(plugin = "maven-publish")
+
+    repositories{
+        maven(uri("https://repo.opencollab.dev/maven-releases/"))
+        maven(uri("https://repo.opencollab.dev/maven-snapshots/"))
+    }
 
     java {
         toolchain {
