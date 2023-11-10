@@ -1,0 +1,548 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: CoolLoong <1542536763@qq.com>
+Date: Fri, 10 Nov 2023 11:55:48 +0800
+Subject: [PATCH] rename domain
+
+
+diff --git a/build.gradle.kts b/build.gradle.kts
+index fc9258a6012adbfc41b5f75d33ef40ef4acbf70c..a04ec0d6938ff59929c4092bd1748f1a317f24b8 100644
+--- a/build.gradle.kts
++++ b/build.gradle.kts
+@@ -19,7 +19,7 @@ dependencies {
+         exclude("io.papermc.paper", "paper-api")
+     }
+     implementation("org.cloudburstmc:block-state-updater:1.20.40-SNAPSHOT")
+-    compileOnly(files("C:\\Users\\wyd\\IdeaProjects\\Allay\\Allay-API\\build\\libs\\Allay-API-0.0.1-all.jar"))
++    compileOnly(files("E:\\ideaproject\\Allay\\Allay-API\\build\\libs\\Allay-API-0.0.1-all.jar"))
+     compileOnly("org.projectlombok:lombok:1.18.30")
+     annotationProcessor("org.projectlombok:lombok:1.18.30")// AllayMC
+     implementation("com.fasterxml.jackson.core:jackson-core:2.15.2")
+diff --git a/src/main/java/cn/allay/jegenerator/mappings/type/BlockMappings.java b/src/main/java/cn/allay/jegenerator/mappings/type/BlockMappings.java
+deleted file mode 100644
+index 0be7ee8d8ec78bf64b9bcba2cdd9072953b653a4..0000000000000000000000000000000000000000
+--- a/src/main/java/cn/allay/jegenerator/mappings/type/BlockMappings.java
++++ /dev/null
+@@ -1,27 +0,0 @@
+-package cn.allay.jegenerator.mappings.type;
+-
+-
+-import lombok.Builder;
+-import lombok.Value;
+-import net.minecraft.world.level.block.Block;
+-import net.minecraft.world.level.block.state.BlockState;
+-
+-@Builder
+-@Value
+-public class BlockMappings{
+-    cn.allay.api.block.type.BlockState bedrockAir;
+-    cn.allay.api.block.type.BlockState bedrockWater;
+-    cn.allay.api.block.type.BlockState[] blockMappings;
+-
+-    public cn.allay.api.block.type.BlockState getBedrockBlock(int javaRuntimeId) {
+-        if (javaRuntimeId < 0 || javaRuntimeId >= this.blockMappings.length) {
+-            return bedrockAir;
+-        }
+-        cn.allay.api.block.type.BlockState blockMapping = this.blockMappings[javaRuntimeId];
+-        return blockMapping == null ? bedrockAir : blockMapping;
+-    }
+-
+-    public cn.allay.api.block.type.BlockState getBedrockBlock(BlockState jeBlockState) {
+-        return getBedrockBlock(Block.BLOCK_STATE_REGISTRY.getId(jeBlockState));
+-    }
+-}
+diff --git a/src/main/java/net/minecraft/commands/Commands.java b/src/main/java/net/minecraft/commands/Commands.java
+index 1faa631b5b83b269356a41ca586745934bb144fa..5efa189b86f8003b02c78b69de54503e249f15a8 100644
+--- a/src/main/java/net/minecraft/commands/Commands.java
++++ b/src/main/java/net/minecraft/commands/Commands.java
+@@ -1,6 +1,6 @@
+ package net.minecraft.commands;
+ 
+-import cn.allay.jegenerator.commands.DebugChunkCommand; //AllayMC
++import org.allaymc.jegenerator.commands.DebugChunkCommand; //AllayMC
+ import com.google.common.collect.Maps;
+ import com.mojang.brigadier.ParseResults;
+ import com.mojang.brigadier.StringReader;
+diff --git a/src/main/java/net/minecraft/server/Bootstrap.java b/src/main/java/net/minecraft/server/Bootstrap.java
+index 58d9e0b087096981c9224cf46275cb52d71fcaf3..c2309fe2a679ac0dde166f6f7d458d50d709aaca 100644
+--- a/src/main/java/net/minecraft/server/Bootstrap.java
++++ b/src/main/java/net/minecraft/server/Bootstrap.java
+@@ -1,6 +1,6 @@
+ package net.minecraft.server;
+ 
+-import cn.allay.jegenerator.JeGeneratorMain;// AllayMC
++import org.allaymc.jegenerator.JeGeneratorMain;// AllayMC
+ import com.mojang.logging.LogUtils;
+ import java.io.PrintStream;
+ import java.time.Duration;
+diff --git a/src/main/java/net/minecraft/server/level/ChunkMap.java b/src/main/java/net/minecraft/server/level/ChunkMap.java
+index c9a4c111654af0bb6ef446408e8aa0d49f1dc00d..4b6c9521647dc3802b509ffe1933f43058135585 100644
+--- a/src/main/java/net/minecraft/server/level/ChunkMap.java
++++ b/src/main/java/net/minecraft/server/level/ChunkMap.java
+@@ -1,6 +1,6 @@
+ package net.minecraft.server.level;
+ 
+-import cn.allay.jegenerator.chunk.MockThreadedLevelLightEngine; // AllayMC
++import org.allaymc.jegenerator.chunk.MockThreadedLevelLightEngine; // AllayMC
+ import co.aikar.timings.Timing; // Paper
+ import com.google.common.collect.ImmutableList;
+ import com.google.common.collect.ImmutableList.Builder;
+diff --git a/src/main/java/cn/allay/jegenerator/JeGenerator.java b/src/main/java/org/allaymc/jegenerator/JeGenerator.java
+similarity index 87%
+rename from src/main/java/cn/allay/jegenerator/JeGenerator.java
+rename to src/main/java/org/allaymc/jegenerator/JeGenerator.java
+index 03bdb2794c19bd8ce0b730eb520b68118b306847..98e33c1776d7310e14e0f6fb08792ead6d7681b8 100644
+--- a/src/main/java/cn/allay/jegenerator/JeGenerator.java
++++ b/src/main/java/org/allaymc/jegenerator/JeGenerator.java
+@@ -1,10 +1,10 @@
+-package cn.allay.jegenerator;
++package org.allaymc.jegenerator;
+ 
+-import cn.allay.api.world.GeneratorType;
+-import cn.allay.api.world.chunk.UnsafeChunk;
+-import cn.allay.api.world.generator.ChunkGenerateContext;
+-import cn.allay.api.world.generator.WorldGenerator;
+-import cn.allay.jegenerator.utils.ChunkUtils;
++import org.allaymc.api.world.GeneratorType;
++import org.allaymc.api.world.chunk.UnsafeChunk;
++import org.allaymc.api.world.generator.ChunkGenerateContext;
++import org.allaymc.api.world.generator.WorldGenerator;
++import org.allaymc.jegenerator.utils.ChunkUtils;
+ import net.minecraft.core.registries.Registries;
+ import net.minecraft.resources.ResourceKey;
+ import net.minecraft.server.MinecraftServer;
+diff --git a/src/main/java/cn/allay/jegenerator/JeGeneratorMain.java b/src/main/java/org/allaymc/jegenerator/JeGeneratorMain.java
+similarity index 75%
+rename from src/main/java/cn/allay/jegenerator/JeGeneratorMain.java
+rename to src/main/java/org/allaymc/jegenerator/JeGeneratorMain.java
+index 08260880dfe026738cf7f5cb6773d7e18e246fb6..9f7a656ee0a441c98465f926d35a9bc22fda1fd6 100644
+--- a/src/main/java/cn/allay/jegenerator/JeGeneratorMain.java
++++ b/src/main/java/org/allaymc/jegenerator/JeGeneratorMain.java
+@@ -1,13 +1,13 @@
+-package cn.allay.jegenerator;
++package org.allaymc.jegenerator;
+ 
+-import cn.allay.api.world.generator.WorldGenerator;
++import org.allaymc.api.world.generator.WorldGenerator;
+ import net.minecraft.obfuscate.DontObfuscate;
+ 
+ @DontObfuscate
+ public final class JeGeneratorMain {
+     public static void setup() {
+         try {
+-            Class.forName("cn.allay.jegenerator.mappings.MappingRegistries");
++            Class.forName("org.allaymc.jegenerator.mappings.MappingRegistries");
+         } catch (ClassNotFoundException e) {
+             throw new RuntimeException(e);
+         }
+diff --git a/src/main/java/cn/allay/jegenerator/chunk/AllayChunkAccess.java b/src/main/java/org/allaymc/jegenerator/chunk/AllayChunkAccess.java
+similarity index 97%
+rename from src/main/java/cn/allay/jegenerator/chunk/AllayChunkAccess.java
+rename to src/main/java/org/allaymc/jegenerator/chunk/AllayChunkAccess.java
+index 335b16a8b161c581c2dea3922efb3c3c7a5abdbe..8160f525415e916a79763df2924e075f896941d5 100644
+--- a/src/main/java/cn/allay/jegenerator/chunk/AllayChunkAccess.java
++++ b/src/main/java/org/allaymc/jegenerator/chunk/AllayChunkAccess.java
+@@ -1,6 +1,6 @@
+-package cn.allay.jegenerator.chunk;
++package org.allaymc.jegenerator.chunk;
+ 
+-import cn.allay.api.world.chunk.UnsafeChunk;
++import org.allaymc.api.world.chunk.UnsafeChunk;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Registry;
+ import net.minecraft.nbt.CompoundTag;
+diff --git a/src/main/java/cn/allay/jegenerator/chunk/MockThreadedLevelLightEngine.java b/src/main/java/org/allaymc/jegenerator/chunk/MockThreadedLevelLightEngine.java
+similarity index 98%
+rename from src/main/java/cn/allay/jegenerator/chunk/MockThreadedLevelLightEngine.java
+rename to src/main/java/org/allaymc/jegenerator/chunk/MockThreadedLevelLightEngine.java
+index a28a6e0042ebbae13a9aab393e9f3dce1f3e32e8..f2a1336962d7b27719d8a12864cd52fa5df2c265 100644
+--- a/src/main/java/cn/allay/jegenerator/chunk/MockThreadedLevelLightEngine.java
++++ b/src/main/java/org/allaymc/jegenerator/chunk/MockThreadedLevelLightEngine.java
+@@ -1,4 +1,4 @@
+-package cn.allay.jegenerator.chunk;
++package org.allaymc.jegenerator.chunk;
+ 
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.SectionPos;
+diff --git a/src/main/java/cn/allay/jegenerator/commands/DebugChunkCommand.java b/src/main/java/org/allaymc/jegenerator/commands/DebugChunkCommand.java
+similarity index 97%
+rename from src/main/java/cn/allay/jegenerator/commands/DebugChunkCommand.java
+rename to src/main/java/org/allaymc/jegenerator/commands/DebugChunkCommand.java
+index fdf8f87722a8c9153fbfd6148efb5a85b5b2714a..dcad9f4ea930c16c63ff9e3f2f1b91d205576a6c 100644
+--- a/src/main/java/cn/allay/jegenerator/commands/DebugChunkCommand.java
++++ b/src/main/java/org/allaymc/jegenerator/commands/DebugChunkCommand.java
+@@ -1,4 +1,4 @@
+-package cn.allay.jegenerator.commands;
++package org.allaymc.jegenerator.commands;
+ 
+ import com.mojang.brigadier.CommandDispatcher;
+ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+diff --git a/src/main/java/cn/allay/jegenerator/mappings/AbstractMappedRegistry.java b/src/main/java/org/allaymc/jegenerator/mappings/AbstractMappedRegistry.java
+similarity index 96%
+rename from src/main/java/cn/allay/jegenerator/mappings/AbstractMappedRegistry.java
+rename to src/main/java/org/allaymc/jegenerator/mappings/AbstractMappedRegistry.java
+index ab3c6f73fff5e0779b4b650bc782007ad10c4388..edf48887b3bddf3f09db6b050339181e5c2aec13 100644
+--- a/src/main/java/cn/allay/jegenerator/mappings/AbstractMappedRegistry.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/AbstractMappedRegistry.java
+@@ -1,7 +1,7 @@
+-package cn.allay.jegenerator.mappings;
++package org.allaymc.jegenerator.mappings;
+ 
+ 
+-import cn.allay.api.registry.RegistryLoader;
++import org.allaymc.api.registry.RegistryLoader;
+ 
+ import javax.annotation.Nullable;
+ import java.util.Map;
+diff --git a/src/main/java/cn/allay/jegenerator/mappings/ArrayMappingRegistry.java b/src/main/java/org/allaymc/jegenerator/mappings/ArrayMappingRegistry.java
+similarity index 97%
+rename from src/main/java/cn/allay/jegenerator/mappings/ArrayMappingRegistry.java
+rename to src/main/java/org/allaymc/jegenerator/mappings/ArrayMappingRegistry.java
+index 73847010e91a8b7bfb114ccc564b1eab977a741b..dd29ef3b4b21febce2b288a8f2a4f140d17d5f67 100644
+--- a/src/main/java/cn/allay/jegenerator/mappings/ArrayMappingRegistry.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/ArrayMappingRegistry.java
+@@ -1,6 +1,6 @@
+-package cn.allay.jegenerator.mappings;
++package org.allaymc.jegenerator.mappings;
+ 
+-import cn.allay.api.registry.RegistryLoader;
++import org.allaymc.api.registry.RegistryLoader;
+ 
+ import javax.annotation.Nullable;
+ import java.util.function.Supplier;
+diff --git a/src/main/java/cn/allay/jegenerator/mappings/IRegistry.java b/src/main/java/org/allaymc/jegenerator/mappings/IRegistry.java
+similarity index 94%
+rename from src/main/java/cn/allay/jegenerator/mappings/IRegistry.java
+rename to src/main/java/org/allaymc/jegenerator/mappings/IRegistry.java
+index d03d086dba07744148433dcc6c478a67f7e07e5b..3a8ae779012eb5ba94f9dbdebdf57e29887f33e3 100644
+--- a/src/main/java/cn/allay/jegenerator/mappings/IRegistry.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/IRegistry.java
+@@ -1,4 +1,4 @@
+-package cn.allay.jegenerator.mappings;
++package org.allaymc.jegenerator.mappings;
+ 
+ import java.util.function.Consumer;
+ 
+diff --git a/src/main/java/cn/allay/jegenerator/mappings/MappedMappingRegistry.java b/src/main/java/org/allaymc/jegenerator/mappings/MappedMappingRegistry.java
+similarity index 97%
+rename from src/main/java/cn/allay/jegenerator/mappings/MappedMappingRegistry.java
+rename to src/main/java/org/allaymc/jegenerator/mappings/MappedMappingRegistry.java
+index 5f99ef914a17ed7dc299ac53f086bfceb39f67de..4cb13c0d38af959ffc4032a6053850c0b466a5aa 100644
+--- a/src/main/java/cn/allay/jegenerator/mappings/MappedMappingRegistry.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/MappedMappingRegistry.java
+@@ -1,6 +1,6 @@
+-package cn.allay.jegenerator.mappings;
++package org.allaymc.jegenerator.mappings;
+ 
+-import cn.allay.api.registry.RegistryLoader;
++import org.allaymc.api.registry.RegistryLoader;
+ 
+ import java.util.Map;
+ import java.util.function.Supplier;
+diff --git a/src/main/java/cn/allay/jegenerator/mappings/MappingRegistries.java b/src/main/java/org/allaymc/jegenerator/mappings/MappingRegistries.java
+similarity index 76%
+rename from src/main/java/cn/allay/jegenerator/mappings/MappingRegistries.java
+rename to src/main/java/org/allaymc/jegenerator/mappings/MappingRegistries.java
+index 2ef6ea6b4375b44d606254628837f477b6fee9c1..5338e9527d025dee7af73a51cea4ad448e7b11aa 100644
+--- a/src/main/java/cn/allay/jegenerator/mappings/MappingRegistries.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/MappingRegistries.java
+@@ -1,14 +1,12 @@
+-package cn.allay.jegenerator.mappings;
++package org.allaymc.jegenerator.mappings;
+ 
+-import cn.allay.jegenerator.mappings.loader.RegistryLoaders;
+-import cn.allay.jegenerator.mappings.populator.BiomeRegistryLoader;
+-import cn.allay.jegenerator.mappings.populator.BlockRegistryPopulator;
+-import cn.allay.jegenerator.mappings.type.BlockMappings;
++import org.allaymc.jegenerator.mappings.populator.BiomeRegistryLoader;
++import org.allaymc.jegenerator.mappings.populator.BlockRegistryPopulator;
++import org.allaymc.jegenerator.mappings.type.BlockMappings;
+ import com.fasterxml.jackson.core.JsonParser;
+ import com.fasterxml.jackson.databind.DeserializationFeature;
+ import com.fasterxml.jackson.databind.ObjectMapper;
+ import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
+-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+ 
+ public class MappingRegistries {
+     public static final ObjectMapper JSON_MAPPER = new ObjectMapper()
+diff --git a/src/main/java/cn/allay/jegenerator/mappings/MappingRegistry.java b/src/main/java/org/allaymc/jegenerator/mappings/MappingRegistry.java
+similarity index 97%
+rename from src/main/java/cn/allay/jegenerator/mappings/MappingRegistry.java
+rename to src/main/java/org/allaymc/jegenerator/mappings/MappingRegistry.java
+index 8d853ae2b530b73febee2d5785a8026a73ac3909..1a8414167d4268d0ad0da96523a80ad07ab12f13 100644
+--- a/src/main/java/cn/allay/jegenerator/mappings/MappingRegistry.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/MappingRegistry.java
+@@ -1,7 +1,7 @@
+-package cn.allay.jegenerator.mappings;
++package org.allaymc.jegenerator.mappings;
+ 
+ 
+-import cn.allay.api.registry.RegistryLoader;
++import org.allaymc.api.registry.RegistryLoader;
+ 
+ import java.util.function.Consumer;
+ 
+diff --git a/src/main/java/cn/allay/jegenerator/mappings/SimpleMappedRegistry.java b/src/main/java/org/allaymc/jegenerator/mappings/SimpleMappedRegistry.java
+similarity index 97%
+rename from src/main/java/cn/allay/jegenerator/mappings/SimpleMappedRegistry.java
+rename to src/main/java/org/allaymc/jegenerator/mappings/SimpleMappedRegistry.java
+index 1c0869bd83d414a2c60d0df67a478ed3bca38b09..d1e4e4b5fd9779a601cf003ec9d7fe661e0778a5 100644
+--- a/src/main/java/cn/allay/jegenerator/mappings/SimpleMappedRegistry.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/SimpleMappedRegistry.java
+@@ -1,7 +1,7 @@
+-package cn.allay.jegenerator.mappings;
++package org.allaymc.jegenerator.mappings;
+ 
+ 
+-import cn.allay.api.registry.RegistryLoader;
++import org.allaymc.api.registry.RegistryLoader;
+ 
+ import java.util.Map;
+ import java.util.function.Supplier;
+diff --git a/src/main/java/cn/allay/jegenerator/mappings/SimpleMappingRegistry.java b/src/main/java/org/allaymc/jegenerator/mappings/SimpleMappingRegistry.java
+similarity index 96%
+rename from src/main/java/cn/allay/jegenerator/mappings/SimpleMappingRegistry.java
+rename to src/main/java/org/allaymc/jegenerator/mappings/SimpleMappingRegistry.java
+index 06b600c3b26706ab7a6f8001baf68f781675425d..566977082c1bbee69cafc2a8dca501628a5b2d4e 100644
+--- a/src/main/java/cn/allay/jegenerator/mappings/SimpleMappingRegistry.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/SimpleMappingRegistry.java
+@@ -1,7 +1,7 @@
+-package cn.allay.jegenerator.mappings;
++package org.allaymc.jegenerator.mappings;
+ 
+ 
+-import cn.allay.api.registry.RegistryLoader;
++import org.allaymc.api.registry.RegistryLoader;
+ 
+ import java.util.function.Supplier;
+ 
+diff --git a/src/main/java/cn/allay/jegenerator/mappings/VersionedMappingRegistry.java b/src/main/java/org/allaymc/jegenerator/mappings/VersionedMappingRegistry.java
+similarity index 97%
+rename from src/main/java/cn/allay/jegenerator/mappings/VersionedMappingRegistry.java
+rename to src/main/java/org/allaymc/jegenerator/mappings/VersionedMappingRegistry.java
+index bf8813f15fb33389b81b0fd9324576a1d6b320da..1a91daa8a5701f9bbc1d702d3cb8c8a66af52bb6 100644
+--- a/src/main/java/cn/allay/jegenerator/mappings/VersionedMappingRegistry.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/VersionedMappingRegistry.java
+@@ -1,6 +1,6 @@
+-package cn.allay.jegenerator.mappings;
++package org.allaymc.jegenerator.mappings;
+ 
+-import cn.allay.api.registry.RegistryLoader;
++import org.allaymc.api.registry.RegistryLoader;
+ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+ 
+ import java.util.Map;
+diff --git a/src/main/java/cn/allay/jegenerator/mappings/loader/NbtRegistryLoader.java b/src/main/java/org/allaymc/jegenerator/mappings/loader/NbtRegistryLoader.java
+similarity index 86%
+rename from src/main/java/cn/allay/jegenerator/mappings/loader/NbtRegistryLoader.java
+rename to src/main/java/org/allaymc/jegenerator/mappings/loader/NbtRegistryLoader.java
+index 1b89fa47b422ce8aa3585a16250932ea4c23e6d9..64efc709c0e840c216b0f891cb442fc57d2a469e 100644
+--- a/src/main/java/cn/allay/jegenerator/mappings/loader/NbtRegistryLoader.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/loader/NbtRegistryLoader.java
+@@ -1,6 +1,6 @@
+-package cn.allay.jegenerator.mappings.loader;
++package org.allaymc.jegenerator.mappings.loader;
+ 
+-import cn.allay.api.registry.RegistryLoader;
++import org.allaymc.api.registry.RegistryLoader;
+ import net.minecraft.server.Main;
+ import org.cloudburstmc.nbt.NBTInputStream;
+ import org.cloudburstmc.nbt.NbtMap;
+diff --git a/src/main/java/cn/allay/jegenerator/mappings/loader/RegistryLoaders.java b/src/main/java/org/allaymc/jegenerator/mappings/loader/RegistryLoaders.java
+similarity index 91%
+rename from src/main/java/cn/allay/jegenerator/mappings/loader/RegistryLoaders.java
+rename to src/main/java/org/allaymc/jegenerator/mappings/loader/RegistryLoaders.java
+index aa426cfff23a8671542e24141b1149cafdb10ed7..68b10efea529903dd99f3dcea95465a3417847f2 100644
+--- a/src/main/java/cn/allay/jegenerator/mappings/loader/RegistryLoaders.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/loader/RegistryLoaders.java
+@@ -1,6 +1,6 @@
+-package cn.allay.jegenerator.mappings.loader;
++package org.allaymc.jegenerator.mappings.loader;
+ 
+-import cn.allay.api.registry.RegistryLoader;
++import org.allaymc.api.registry.RegistryLoader;
+ import org.jetbrains.annotations.NotNull;
+ 
+ import java.util.function.Supplier;
+diff --git a/src/main/java/cn/allay/jegenerator/mappings/populator/BiomeRegistryLoader.java b/src/main/java/org/allaymc/jegenerator/mappings/populator/BiomeRegistryLoader.java
+similarity index 96%
+rename from src/main/java/cn/allay/jegenerator/mappings/populator/BiomeRegistryLoader.java
+rename to src/main/java/org/allaymc/jegenerator/mappings/populator/BiomeRegistryLoader.java
+index e279027d60a79ca890050d72910b08636be0f322..4df722e9273124198c30b2c10038ee4b99bfe317 100644
+--- a/src/main/java/cn/allay/jegenerator/mappings/populator/BiomeRegistryLoader.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/populator/BiomeRegistryLoader.java
+@@ -23,10 +23,10 @@
+  * @link https://github.com/GeyserMC/Geyser
+  */
+ 
+-package cn.allay.jegenerator.mappings.populator;
++package org.allaymc.jegenerator.mappings.populator;
+ 
+-import cn.allay.api.registry.RegistryLoader;
+-import cn.allay.jegenerator.mappings.MappingRegistries;
++import org.allaymc.api.registry.RegistryLoader;
++import org.allaymc.jegenerator.mappings.MappingRegistries;
+ import com.fasterxml.jackson.annotation.JsonProperty;
+ import com.fasterxml.jackson.core.type.TypeReference;
+ import com.google.common.util.concurrent.MoreExecutors;
+diff --git a/src/main/java/cn/allay/jegenerator/mappings/populator/BlockRegistryPopulator.java b/src/main/java/org/allaymc/jegenerator/mappings/populator/BlockRegistryPopulator.java
+similarity index 90%
+rename from src/main/java/cn/allay/jegenerator/mappings/populator/BlockRegistryPopulator.java
+rename to src/main/java/org/allaymc/jegenerator/mappings/populator/BlockRegistryPopulator.java
+index 134c6aaf35335baacfa59ea310d7644e4b35344a..b52faa28a2296405f744fa7edc4033fc5f378cff 100644
+--- a/src/main/java/cn/allay/jegenerator/mappings/populator/BlockRegistryPopulator.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/populator/BlockRegistryPopulator.java
+@@ -1,12 +1,12 @@
+-package cn.allay.jegenerator.mappings.populator;
+-
+-import cn.allay.api.block.interfaces.liquid.BlockWaterBehavior;
+-import cn.allay.api.block.palette.BlockStateHashPalette;
+-import cn.allay.api.block.property.type.BlockPropertyType;
+-import cn.allay.api.data.VanillaBlockPropertyTypes;
+-import cn.allay.jegenerator.mappings.MappingRegistries;
+-import cn.allay.jegenerator.mappings.type.BedrockBlockDefinition;
+-import cn.allay.jegenerator.mappings.type.BlockMappings;
++package org.allaymc.jegenerator.mappings.populator;
++
++import org.allaymc.api.block.interfaces.liquid.BlockWaterBehavior;
++import org.allaymc.api.block.palette.BlockStateHashPalette;
++import org.allaymc.api.block.property.type.BlockPropertyType;
++import org.allaymc.api.data.VanillaBlockPropertyTypes;
++import org.allaymc.jegenerator.mappings.MappingRegistries;
++import org.allaymc.jegenerator.mappings.type.BedrockBlockDefinition;
++import org.allaymc.jegenerator.mappings.type.BlockMappings;
+ import com.fasterxml.jackson.databind.JsonNode;
+ import com.google.common.collect.Interner;
+ import com.google.common.collect.Interners;
+@@ -103,7 +103,7 @@ public final class BlockRegistryPopulator {
+         }
+ 
+ 
+-        cn.allay.api.block.type.BlockState[] blocks = new cn.allay.api.block.type.BlockState[BLOCK_STATE_REGISTRY.size()];
++        org.allaymc.api.block.type.BlockState[] blocks = new org.allaymc.api.block.type.BlockState[BLOCK_STATE_REGISTRY.size()];
+         JsonNode blocksJson;
+         try (InputStream stream = Main.class.getClassLoader().getResourceAsStream("bedrock/blocks.json")) {
+             blocksJson = MappingRegistries.JSON_MAPPER.readTree(stream);
+@@ -112,8 +112,8 @@ public final class BlockRegistryPopulator {
+         }
+ 
+         Iterator<Map.Entry<String, JsonNode>> blocksIterator = blocksJson.fields();
+-        cn.allay.api.block.type.BlockState airDefinition = null;
+-        cn.allay.api.block.type.BlockState flowWaterDefinition = null;
++        org.allaymc.api.block.type.BlockState airDefinition = null;
++        org.allaymc.api.block.type.BlockState flowWaterDefinition = null;
+         int javaRuntimeId = -1;
+         while (blocksIterator.hasNext()) {
+             javaRuntimeId++;
+diff --git a/src/main/java/cn/allay/jegenerator/mappings/type/BedrockBlockDefinition.java b/src/main/java/org/allaymc/jegenerator/mappings/type/BedrockBlockDefinition.java
+similarity index 93%
+rename from src/main/java/cn/allay/jegenerator/mappings/type/BedrockBlockDefinition.java
+rename to src/main/java/org/allaymc/jegenerator/mappings/type/BedrockBlockDefinition.java
+index d7f6683a9596ac4def088c911eb4a7eab007d912..741a6846bbe09a9ff934c6198eed4e959723aae0 100644
+--- a/src/main/java/cn/allay/jegenerator/mappings/type/BedrockBlockDefinition.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/type/BedrockBlockDefinition.java
+@@ -1,4 +1,4 @@
+-package cn.allay.jegenerator.mappings.type;
++package org.allaymc.jegenerator.mappings.type;
+ 
+ import lombok.Getter;
+ import org.cloudburstmc.nbt.NbtMap;
+diff --git a/src/main/java/cn/allay/jegenerator/mappings/type/BlockMapping.java b/src/main/java/org/allaymc/jegenerator/mappings/type/BlockMapping.java
+similarity index 93%
+rename from src/main/java/cn/allay/jegenerator/mappings/type/BlockMapping.java
+rename to src/main/java/org/allaymc/jegenerator/mappings/type/BlockMapping.java
+index d66faf67258f7873ee8ea294452a20b7ece343a8..121f98bd93c3e70a527eb3e8a4071ca42544ea76 100644
+--- a/src/main/java/cn/allay/jegenerator/mappings/type/BlockMapping.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/type/BlockMapping.java
+@@ -1,6 +1,6 @@
+-package cn.allay.jegenerator.mappings.type;
++package org.allaymc.jegenerator.mappings.type;
+ 
+-import cn.allay.jegenerator.utils.BlockUtils;
++import org.allaymc.jegenerator.utils.BlockUtils;
+ import lombok.Builder;
+ import lombok.Value;
+ 
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/type/BlockMappings.java b/src/main/java/org/allaymc/jegenerator/mappings/type/BlockMappings.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..9a1a296b65e51c0c7bc67712e9f5a8353ed338a7
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/mappings/type/BlockMappings.java
+@@ -0,0 +1,27 @@
++package org.allaymc.jegenerator.mappings.type;
++
++
++import lombok.Builder;
++import lombok.Value;
++import net.minecraft.world.level.block.Block;
++import net.minecraft.world.level.block.state.BlockState;
++
++@Builder
++@Value
++public class BlockMappings{
++    org.allaymc.api.block.type.BlockState bedrockAir;
++    org.allaymc.api.block.type.BlockState bedrockWater;
++    org.allaymc.api.block.type.BlockState[] blockMappings;
++
++    public org.allaymc.api.block.type.BlockState getBedrockBlock(int javaRuntimeId) {
++        if (javaRuntimeId < 0 || javaRuntimeId >= this.blockMappings.length) {
++            return bedrockAir;
++        }
++        org.allaymc.api.block.type.BlockState blockMapping = this.blockMappings[javaRuntimeId];
++        return blockMapping == null ? bedrockAir : blockMapping;
++    }
++
++    public org.allaymc.api.block.type.BlockState getBedrockBlock(BlockState jeBlockState) {
++        return getBedrockBlock(Block.BLOCK_STATE_REGISTRY.getId(jeBlockState));
++    }
++}
+diff --git a/src/main/java/cn/allay/jegenerator/utils/BlockUtils.java b/src/main/java/org/allaymc/jegenerator/utils/BlockUtils.java
+similarity index 90%
+rename from src/main/java/cn/allay/jegenerator/utils/BlockUtils.java
+rename to src/main/java/org/allaymc/jegenerator/utils/BlockUtils.java
+index 10e49c856e3315cfb1f4b095fdefc956d22a7990..0f4f89ab44c4719711f3f085d120ee44c7e1fcce 100644
+--- a/src/main/java/cn/allay/jegenerator/utils/BlockUtils.java
++++ b/src/main/java/org/allaymc/jegenerator/utils/BlockUtils.java
+@@ -1,4 +1,4 @@
+-package cn.allay.jegenerator.utils;
++package org.allaymc.jegenerator.utils;
+ 
+ public class BlockUtils {
+     public static String getCleanIdentifier(String fullJavaIdentifier) {
+diff --git a/src/main/java/cn/allay/jegenerator/utils/ChunkUtils.java b/src/main/java/org/allaymc/jegenerator/utils/ChunkUtils.java
+similarity index 85%
+rename from src/main/java/cn/allay/jegenerator/utils/ChunkUtils.java
+rename to src/main/java/org/allaymc/jegenerator/utils/ChunkUtils.java
+index a94e6b1dc73da964cfc369dc8db8893246615be8..51b36194dfc44020cb874931063dd22f8c187cbf 100644
+--- a/src/main/java/cn/allay/jegenerator/utils/ChunkUtils.java
++++ b/src/main/java/org/allaymc/jegenerator/utils/ChunkUtils.java
+@@ -1,8 +1,8 @@
+-package cn.allay.jegenerator.utils;
++package org.allaymc.jegenerator.utils;
+ 
+-import cn.allay.api.data.VanillaBiomeId;
+-import cn.allay.api.world.chunk.UnsafeChunk;
+-import cn.allay.jegenerator.mappings.MappingRegistries;
++import org.allaymc.api.data.VanillaBiomeId;
++import org.allaymc.api.world.chunk.UnsafeChunk;
++import org.allaymc.jegenerator.mappings.MappingRegistries;
+ import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Holder;
+@@ -18,7 +18,7 @@ import net.minecraft.world.level.chunk.ChunkAccess;
+ import net.minecraft.world.level.levelgen.Heightmap;
+ 
+ public class ChunkUtils {
+-    private static final cn.allay.api.block.type.BlockState WATER = MappingRegistries.BLOCKS.getBedrockWater();
++    private static final org.allaymc.api.block.type.BlockState WATER = MappingRegistries.BLOCKS.getBedrockWater();
+     private static final Registry<Biome> BIOME_REGISTRY = MinecraftServer.getServer().registryAccess().registryOrThrow(Registries.BIOME);
+     private static final Int2IntArrayMap BIOME_MAPPINGS = MappingRegistries.BIOME.get();
+ 
+@@ -43,7 +43,7 @@ public class ChunkUtils {
+ 
+                     BlockState blockState = input.getBlockState(x, y, z);
+                     boolean hasWater = blockState.getFluidState().is(FluidTags.WATER) || (blockState.hasProperty(BlockStateProperties.WATERLOGGED) && blockState.getValue(BlockStateProperties.WATERLOGGED));
+-                    cn.allay.api.block.type.BlockState bedrockBlock = MappingRegistries.BLOCKS.getBedrockBlock(blockState);
++                    org.allaymc.api.block.type.BlockState bedrockBlock = MappingRegistries.BLOCKS.getBedrockBlock(blockState);
+                     output.setBlockState(x, y, z, bedrockBlock);
+                     if (hasWater) {
+                         output.setBlockState(x, y, z, WATER, 1);
