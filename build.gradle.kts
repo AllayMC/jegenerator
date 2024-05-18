@@ -46,12 +46,13 @@ subprojects {
 
     repositories {
         mavenCentral()
+        maven("https://jitpack.io/")
         maven(paperMavenPublicUrl)
     }
 }
 
 paperweight {
-    serverProject = project(":forktest-server")
+    serverProject = project(":jegenerator-server")
 
     remapRepo = paperMavenPublicUrl
     decompileRepo = paperMavenPublicUrl
@@ -59,10 +60,10 @@ paperweight {
     usePaperUpstream(providers.gradleProperty("paperRef")) {
         withPaperPatcher {
             apiPatchDir = layout.projectDirectory.dir("patches/api")
-            apiOutputDir = layout.projectDirectory.dir("forktest-api")
+            apiOutputDir = layout.projectDirectory.dir("jegenerator-api")
 
             serverPatchDir = layout.projectDirectory.dir("patches/server")
-            serverOutputDir = layout.projectDirectory.dir("forktest-server")
+            serverOutputDir = layout.projectDirectory.dir("jegenerator-server")
 
         }
         patchTasks.register("generatedApi") {
@@ -70,47 +71,6 @@ paperweight {
             upstreamDirPath = "paper-api-generator/generated"
             patchDir = layout.projectDirectory.dir("patches/generatedApi")
             outputDir = layout.projectDirectory.dir("paper-api-generator/generated")
-        }
-    }
-}
-
-//
-// Everything below here is optional if you don't care about publishing API or dev bundles to your repository
-//
-
-tasks.generateDevelopmentBundle {
-    apiCoordinates = "com.example.paperfork:forktest-api"
-    libraryRepositories = listOf(
-        "https://repo.maven.apache.org/maven2/",
-        paperMavenPublicUrl,
-        // "https://my.repo/", // This should be a repo hosting your API (in this example, 'com.example.paperfork:forktest-api')
-    )
-}
-
-allprojects {
-    // Publishing API:
-    // ./gradlew :ForkTest-API:publish[ToMavenLocal]
-    publishing {
-        repositories {
-            maven {
-                name = "myRepoSnapshots"
-                url = uri("https://my.repo/")
-                // See Gradle docs for how to provide credentials to PasswordCredentials
-                // https://docs.gradle.org/current/samples/sample_publishing_credentials.html
-                credentials(PasswordCredentials::class)
-            }
-        }
-    }
-}
-
-publishing {
-    // Publishing dev bundle:
-    // ./gradlew publishDevBundlePublicationTo(MavenLocal|MyRepoSnapshotsRepository) -PpublishDevBundle
-    if (project.hasProperty("publishDevBundle")) {
-        publications.create<MavenPublication>("devBundle") {
-            artifact(tasks.generateDevelopmentBundle) {
-                artifactId = "dev-bundle"
-            }
         }
     }
 }
