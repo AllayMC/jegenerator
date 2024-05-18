@@ -1,0 +1,448 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: CoolLoong <1542536763@qq.com>
+Date: Sun, 19 May 2024 01:39:14 +0800
+Subject: [PATCH] fix: errors
+
+
+diff --git a/src/main/java/net/minecraft/commands/Commands.java b/src/main/java/net/minecraft/commands/Commands.java
+index 3c7071a928a750df320df16b87d46c9244b7b91d..e3b00ae5dfedc704666e879ae013090375e904bd 100644
+--- a/src/main/java/net/minecraft/commands/Commands.java
++++ b/src/main/java/net/minecraft/commands/Commands.java
+@@ -1,6 +1,5 @@
+ package net.minecraft.commands;
+ 
+-import cn.allay.jegenerator.commands.DebugChunkCommand; //AllayMC
+ import com.google.common.collect.Maps;
+ import com.mojang.brigadier.ParseResults;
+ import com.mojang.brigadier.StringReader;
+@@ -135,6 +134,7 @@ import net.minecraft.server.level.ServerPlayer;
+ import net.minecraft.tags.TagKey;
+ import net.minecraft.util.profiling.jfr.JvmProfiler;
+ import net.minecraft.world.level.GameRules;
++import org.allaymc.jegenerator.commands.DebugChunkCommand;
+ import org.slf4j.Logger;
+ 
+ // CraftBukkit start
+diff --git a/src/main/java/net/minecraft/network/CipherDecoder.java b/src/main/java/net/minecraft/network/CipherDecoder.java
+index 7b895b6a626da6297f07582e96d98ecfb6c8c951..2bdc7225b9a23b63e436a9789a6a59ddcb4baf98 100644
+--- a/src/main/java/net/minecraft/network/CipherDecoder.java
++++ b/src/main/java/net/minecraft/network/CipherDecoder.java
+@@ -7,14 +7,11 @@ import java.util.List;
+ import javax.crypto.Cipher;
+ 
+ public class CipherDecoder extends MessageToMessageDecoder<ByteBuf> {
+-    private final com.velocitypowered.natives.encryption.VelocityCipher cipher; // Paper - Use Velocity cipher
+-
+-    public CipherDecoder(com.velocitypowered.natives.encryption.VelocityCipher cipher) {  // Paper - Use Velocity cipher
+-        this.cipher = cipher;  // Paper - Use Velocity cipher
++    public CipherDecoder() {  // Paper - Use Velocity cipher
+     }
+ 
+     protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list) throws Exception {
+-        // Paper start - Use Velocity cipher
++        /*// Paper start - Use Velocity cipher
+         ByteBuf compatible = com.velocitypowered.natives.util.MoreByteBufUtils.ensureCompatible(channelHandlerContext.alloc(), cipher, byteBuf);
+         try {
+             cipher.process(compatible);
+@@ -23,13 +20,12 @@ public class CipherDecoder extends MessageToMessageDecoder<ByteBuf> {
+             compatible.release(); // compatible will never be used if we throw an exception
+             throw e;
+         }
+-        // Paper end - Use Velocity cipher
++        // Paper end - Use Velocity cipher*/
+     }
+ 
+     // Paper start - Use Velocity cipher
+     @Override
+     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+-        cipher.close();
+     }
+     // Paper end - Use Velocity cipher
+ }
+diff --git a/src/main/java/net/minecraft/network/CipherEncoder.java b/src/main/java/net/minecraft/network/CipherEncoder.java
+index ffa1c48585fbbc1d30826d435043527f6183a3ee..c68d67bc0b79d5bbae3523cfc7eb7453db90dd10 100644
+--- a/src/main/java/net/minecraft/network/CipherEncoder.java
++++ b/src/main/java/net/minecraft/network/CipherEncoder.java
+@@ -7,14 +7,11 @@ import javax.crypto.Cipher;
+ import java.util.List;
+ 
+ public class CipherEncoder extends io.netty.handler.codec.MessageToMessageEncoder<ByteBuf> { // Paper - Use Velocity cipher; change superclass
+-    private final com.velocitypowered.natives.encryption.VelocityCipher cipher; // Paper - Use Velocity cipher
+-
+-    public CipherEncoder(com.velocitypowered.natives.encryption.VelocityCipher cipher) {  // Paper - Use Velocity cipher
+-        this.cipher = cipher;  // Paper - Use Velocity cipher
++    public CipherEncoder() {  // Paper - Use Velocity cipher
+     }
+ 
+     protected void encode(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list) throws Exception {
+-        // Paper start - Use Velocity cipher
++        /*// Paper start - Use Velocity cipher
+         ByteBuf compatible = com.velocitypowered.natives.util.MoreByteBufUtils.ensureCompatible(channelHandlerContext.alloc(), cipher, byteBuf);
+         try {
+             cipher.process(compatible);
+@@ -23,13 +20,12 @@ public class CipherEncoder extends io.netty.handler.codec.MessageToMessageEncode
+             compatible.release(); // compatible will never be used if we throw an exception
+             throw e;
+         }
+-        // Paper end - Use Velocity cipher
++        // Paper end - Use Velocity cipher*/
+     }
+ 
+     // Paper start - Use Velocity cipher
+     @Override
+     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+-        cipher.close();
+     }
+     // Paper end - Use Velocity cipher
+ }
+diff --git a/src/main/java/net/minecraft/network/CompressionDecoder.java b/src/main/java/net/minecraft/network/CompressionDecoder.java
+index ba3619b03ea73e4ea55ae2eb79d3b6cd1f48a191..65753584ce2316efa89bca7728ba6436e3b585a9 100644
+--- a/src/main/java/net/minecraft/network/CompressionDecoder.java
++++ b/src/main/java/net/minecraft/network/CompressionDecoder.java
+@@ -13,19 +13,13 @@ public class CompressionDecoder extends ByteToMessageDecoder {
+     public static final int MAXIMUM_COMPRESSED_LENGTH = 2097152;
+     public static final int MAXIMUM_UNCOMPRESSED_LENGTH = 8388608;
+     private final Inflater inflater;
+-    private com.velocitypowered.natives.compression.VelocityCompressor compressor; // Paper - Use Velocity cipher
+     private int threshold;
+     private boolean validateDecompressed;
+ 
+     // Paper start - Use Velocity cipher
+     public CompressionDecoder(int compressionThreshold, boolean rejectsBadPackets) {
+-        this(null, compressionThreshold, rejectsBadPackets);
+-    }
+-    public CompressionDecoder(com.velocitypowered.natives.compression.VelocityCompressor compressor, int compressionThreshold, boolean rejectsBadPackets) {
+         this.threshold = compressionThreshold;
+         this.validateDecompressed = rejectsBadPackets;
+-        this.inflater = compressor == null ? new Inflater() : null;
+-        this.compressor = compressor;
+         // Paper end - Use Velocity cipher
+     }
+ 
+@@ -52,7 +46,7 @@ public class CompressionDecoder extends ByteToMessageDecoder {
+                 list.add(byteBuf2);
+                 return; // Paper - Use Velocity cipher
+                 } // Paper - use velocity compression
+-
++/*
+                 // Paper start - Use Velocity cipher
+                 int claimedUncompressedSize = i; // OBFHELPER
+                 ByteBuf compatibleIn = com.velocitypowered.natives.util.MoreByteBufUtils.ensureCompatible(channelHandlerContext.alloc(), this.compressor, byteBuf);
+@@ -67,7 +61,7 @@ public class CompressionDecoder extends ByteToMessageDecoder {
+                 } finally {
+                     compatibleIn.release();
+                 }
+-                // Paper end - Use Velocity cipher
++                // Paper end - Use Velocity cipher*/
+             }
+         }
+     }
+@@ -75,9 +69,6 @@ public class CompressionDecoder extends ByteToMessageDecoder {
+     // Paper start - Use Velocity cipher
+     @Override
+     public void handlerRemoved0(ChannelHandlerContext ctx) throws Exception {
+-        if (this.compressor != null) {
+-            this.compressor.close();
+-        }
+     }
+     // Paper end - Use Velocity cipher
+ 
+@@ -117,7 +108,7 @@ public class CompressionDecoder extends ByteToMessageDecoder {
+         }
+     }
+ 
+-    public void setThreshold(com.velocitypowered.natives.compression.VelocityCompressor compressor, int compressionThreshold, boolean rejectsBadPackets) { // Paper - Use Velocity cipher
++    public void setThreshold(int compressionThreshold, boolean rejectsBadPackets) { // Paper - Use Velocity cipher
+         this.threshold = compressionThreshold;
+         this.validateDecompressed = rejectsBadPackets;
+     }
+diff --git a/src/main/java/net/minecraft/network/CompressionEncoder.java b/src/main/java/net/minecraft/network/CompressionEncoder.java
+index ec30c291188ac3bba7f1c3bc397576d1edb0a57f..3a8ef54f7ab188bd915f61f23445b3ad0ab2396a 100644
+--- a/src/main/java/net/minecraft/network/CompressionEncoder.java
++++ b/src/main/java/net/minecraft/network/CompressionEncoder.java
+@@ -10,28 +10,17 @@ public class CompressionEncoder extends MessageToByteEncoder<ByteBuf> {
+     @javax.annotation.Nullable // Paper - Use Velocity cipher
+     private final Deflater deflater;
+     @javax.annotation.Nullable // Paper - Use Velocity cipher
+-    private final com.velocitypowered.natives.compression.VelocityCompressor compressor; // Paper - Use Velocity cipher
+     private int threshold;
+ 
+     // Paper start - Use Velocity cipher
+     public CompressionEncoder(int compressionThreshold) {
+-        this(null, compressionThreshold);
+-    }
+-    public CompressionEncoder(@javax.annotation.Nullable com.velocitypowered.natives.compression.VelocityCompressor compressor, int compressionThreshold) {
+         this.threshold = compressionThreshold;
+-        if (compressor == null) {
+-            this.encodeBuf = new byte[8192];
+-            this.deflater = new Deflater();
+-        } else {
+-            this.encodeBuf = null;
+-            this.deflater = null;
+-        }
+-        this.compressor = compressor;
+-        // Paper end - Use Velocity cipher
++        this.encodeBuf = new byte[8192];
++        this.deflater = new Deflater();
+     }
+ 
+     protected void encode(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, ByteBuf byteBuf2) throws Exception { // Paper - Use Velocity cipher
+-        int i = byteBuf.readableBytes();
++        /*int i = byteBuf.readableBytes();
+         if (i > 8388608) {
+             throw new IllegalArgumentException("Packet too big (is " + i + ", should be less than 8388608)");
+         } else {
+@@ -64,12 +53,12 @@ public class CompressionEncoder extends MessageToByteEncoder<ByteBuf> {
+                     compatibleIn.release();
+                 }
+             }
+-        }
++        }*/
+     }
+ 
+     @Override
+     protected ByteBuf allocateBuffer(ChannelHandlerContext ctx, ByteBuf msg, boolean preferDirect) throws Exception{
+-        if (this.compressor != null) {
++        /*if (this.compressor != null) {
+             // We allocate bytes to be compressed plus 1 byte. This covers two cases:
+             //
+             // - Compression
+@@ -82,15 +71,16 @@ public class CompressionEncoder extends MessageToByteEncoder<ByteBuf> {
+             return com.velocitypowered.natives.util.MoreByteBufUtils.preferredBuffer(ctx.alloc(), this.compressor, initialBufferSize);
+         }
+ 
+-        return super.allocateBuffer(ctx, msg, preferDirect);
++        return super.allocateBuffer(ctx, msg, preferDirect);*/
++        return null;
+     }
+ 
+     @Override
+     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+-        if (this.compressor != null) {
++        /*if (this.compressor != null) {
+             this.compressor.close();
+             // Paper end - Use Velocity cipher
+-        }
++        }*/
+     }
+ 
+     public int getThreshold() {
+diff --git a/src/main/java/net/minecraft/network/Connection.java b/src/main/java/net/minecraft/network/Connection.java
+index 02833deaa2bb7e5abc655bc1bdbe15c4b3ac7119..ee8b274e3c9e2be1a8ea51732f402b5e72f654c9 100644
+--- a/src/main/java/net/minecraft/network/Connection.java
++++ b/src/main/java/net/minecraft/network/Connection.java
+@@ -794,16 +794,9 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
+ 
+     public void setupEncryption(javax.crypto.SecretKey key) throws net.minecraft.util.CryptException {
+         if (!this.encrypted) {
+-            try {
+-                com.velocitypowered.natives.encryption.VelocityCipher decryption = com.velocitypowered.natives.util.Natives.cipher.get().forDecryption(key);
+-                com.velocitypowered.natives.encryption.VelocityCipher encryption = com.velocitypowered.natives.util.Natives.cipher.get().forEncryption(key);
+-
+-                this.encrypted = true;
+-                this.channel.pipeline().addBefore("splitter", "decrypt", new CipherDecoder(decryption));
+-                this.channel.pipeline().addBefore("prepender", "encrypt", new CipherEncoder(encryption));
+-            } catch (java.security.GeneralSecurityException e) {
+-                throw new net.minecraft.util.CryptException(e);
+-            }
++            this.encrypted = true;
++            this.channel.pipeline().addBefore("splitter", "decrypt", new CipherDecoder());
++            this.channel.pipeline().addBefore("prepender", "encrypt", new CipherEncoder());
+         }
+     }
+     // Paper end - Use Velocity cipher
+@@ -839,13 +832,12 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
+ 
+     public void setupCompression(int compressionThreshold, boolean rejectsBadPackets) {
+         if (compressionThreshold >= 0) {
+-            com.velocitypowered.natives.compression.VelocityCompressor compressor = com.velocitypowered.natives.util.Natives.compress.get().create(io.papermc.paper.configuration.GlobalConfiguration.get().misc.compressionLevel.or(-1)); // Paper - Use Velocity cipher
+             ChannelHandler channelhandler = this.channel.pipeline().get("decompress");
+ 
+             if (channelhandler instanceof CompressionDecoder) {
+                 CompressionDecoder packetdecompressor = (CompressionDecoder) channelhandler;
+ 
+-                packetdecompressor.setThreshold(compressor, compressionThreshold, rejectsBadPackets); // Paper - Use Velocity cipher
++                packetdecompressor.setThreshold(compressionThreshold, rejectsBadPackets); // Paper - Use Velocity cipher
+             } else {
+                 this.channel.pipeline().addAfter("splitter", "decompress", new CompressionDecoder(compressionThreshold, rejectsBadPackets));
+             }
+@@ -856,7 +848,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
+ 
+                 packetcompressor.setThreshold(compressionThreshold);
+             } else {
+-                this.channel.pipeline().addAfter("prepender", "compress", new CompressionEncoder(compressor, compressionThreshold)); // Paper - Use Velocity cipher
++                this.channel.pipeline().addAfter("prepender", "compress", new CompressionEncoder(compressionThreshold)); // Paper - Use Velocity cipher
+             }
+             this.channel.pipeline().fireUserEventTriggered(io.papermc.paper.network.ConnectionEvent.COMPRESSION_THRESHOLD_SET); // Paper - Add Channel initialization listeners
+         } else {
+diff --git a/src/main/java/net/minecraft/server/Bootstrap.java b/src/main/java/net/minecraft/server/Bootstrap.java
+index 7b7e8b46a06c52aafceac8769380160230ada531..e3f5135a07c6ed3e8358f82720d5da9af4ca46d0 100644
+--- a/src/main/java/net/minecraft/server/Bootstrap.java
++++ b/src/main/java/net/minecraft/server/Bootstrap.java
+@@ -1,6 +1,5 @@
+ package net.minecraft.server;
+ 
+-import cn.allay.jegenerator.JeGeneratorMain;// AllayMC
+ import com.mojang.logging.LogUtils;
+ import java.io.PrintStream;
+ import java.time.Duration;
+@@ -31,6 +30,7 @@ import net.minecraft.world.level.GameRules;
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.ComposterBlock;
+ import net.minecraft.world.level.block.FireBlock;
++import org.allaymc.jegenerator.VanillaGeneratorExtension;
+ import org.slf4j.Logger;
+ 
+ public class Bootstrap {
+@@ -87,7 +87,7 @@ public class Bootstrap {
+ 
+                     // AllayMC start - rundev as debug
+                     if (!Boolean.getBoolean("Paper.isRunDev")) {
+-                        JeGeneratorMain.setup();
++                        VanillaGeneratorExtension.setup();
+                     }
+                     // AllayMC end
+                 }
+diff --git a/src/main/java/net/minecraft/server/level/ChunkMap.java b/src/main/java/net/minecraft/server/level/ChunkMap.java
+index 294686c04e8f2f7ad15585ff5986dce112eed4b1..f00edf4228507a1ac43ca8b109d874bd724988d1 100644
+--- a/src/main/java/net/minecraft/server/level/ChunkMap.java
++++ b/src/main/java/net/minecraft/server/level/ChunkMap.java
+@@ -1,6 +1,5 @@
+ package net.minecraft.server.level;
+ 
+-import cn.allay.jegenerator.chunk.MockThreadedLevelLightEngine; // AllayMC
+ import co.aikar.timings.Timing; // Paper
+ import com.google.common.collect.ImmutableList;
+ import com.google.common.collect.ImmutableList.Builder;
+@@ -104,6 +103,7 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
+ import net.minecraft.world.level.storage.DimensionDataStorage;
+ import net.minecraft.world.level.storage.LevelStorageSource;
+ import net.minecraft.world.phys.Vec3;
++import org.allaymc.jegenerator.MockThreadedLevelLightEngine;
+ import org.apache.commons.lang3.mutable.MutableBoolean;
+ import org.slf4j.Logger;
+ 
+diff --git a/src/main/java/net/minecraft/server/network/ServerConnectionListener.java b/src/main/java/net/minecraft/server/network/ServerConnectionListener.java
+index 8aff5129f85ab5729b3da2e465871be62d15bdf2..5fa199f3a83bc18b82217a9aab5e7f0e4755781b 100644
+--- a/src/main/java/net/minecraft/server/network/ServerConnectionListener.java
++++ b/src/main/java/net/minecraft/server/network/ServerConnectionListener.java
+@@ -107,8 +107,8 @@ public class ServerConnectionListener {
+             }
+ 
+             // Paper start - Use Velocity cipher
+-            ServerConnectionListener.LOGGER.info("Paper: Using " + com.velocitypowered.natives.util.Natives.compress.getLoadedVariant() + " compression from Velocity.");
+-            ServerConnectionListener.LOGGER.info("Paper: Using " + com.velocitypowered.natives.util.Natives.cipher.getLoadedVariant() + " cipher from Velocity.");
++//            ServerConnectionListener.LOGGER.info("Paper: Using " + com.velocitypowered.natives.util.Natives.compress.getLoadedVariant() + " compression from Velocity.");
++//            ServerConnectionListener.LOGGER.info("Paper: Using " + com.velocitypowered.natives.util.Natives.cipher.getLoadedVariant() + " cipher from Velocity.");
+             // Paper end - Use Velocity cipher
+ 
+             this.channels.add(((ServerBootstrap) ((ServerBootstrap) (new ServerBootstrap()).channel(oclass)).childHandler(new ChannelInitializer<Channel>() {
+diff --git a/src/main/java/org/allaymc/jegenerator/AllayVanillaGenerator.java b/src/main/java/org/allaymc/jegenerator/AllayVanillaGenerator.java
+index 4f8b96225b66783996ee19bb5ba5f06d8fbaa617..86b15061c40656f82038b6698a2b708ab1987a43 100644
+--- a/src/main/java/org/allaymc/jegenerator/AllayVanillaGenerator.java
++++ b/src/main/java/org/allaymc/jegenerator/AllayVanillaGenerator.java
+@@ -1,5 +1,6 @@
+ package org.allaymc.jegenerator;
+ 
++import net.minecraft.world.level.chunk.status.ChunkStatus;
+ import org.allaymc.api.world.chunk.UnsafeChunk;
+ import org.allaymc.api.world.generator.ChunkGenerateContext;
+ import org.allaymc.api.world.generator.WorldGenerator;
+@@ -10,7 +11,6 @@ import net.minecraft.resources.ResourceKey;
+ import net.minecraft.server.MinecraftServer;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.world.level.chunk.ChunkAccess;
+-import net.minecraft.world.level.chunk.ChunkStatus;
+ import net.minecraft.world.level.dimension.LevelStem;
+ 
+ import java.util.Locale;
+diff --git a/src/main/java/org/allaymc/jegenerator/PNXVanillaGenerator.java b/src/main/java/org/allaymc/jegenerator/PNXVanillaGenerator.java
+index 9cb7c0a4be24e51fc3b44567155dcb639554ce68..5b7fce952a2f2b934630201ef0197418e3a298d3 100644
+--- a/src/main/java/org/allaymc/jegenerator/PNXVanillaGenerator.java
++++ b/src/main/java/org/allaymc/jegenerator/PNXVanillaGenerator.java
+@@ -1,33 +1,21 @@
+ package org.allaymc.jegenerator;
+ 
+ import cn.nukkit.Server;
+-import cn.nukkit.level.DimensionData;
+ import cn.nukkit.level.DimensionEnum;
+ import cn.nukkit.level.format.ChunkState;
+ import cn.nukkit.level.format.IChunk;
+ import cn.nukkit.level.generator.GenerateStage;
+ import cn.nukkit.level.generator.Generator;
+-import cn.nukkit.level.generator.terra.TerraGenerator;
+-import cn.nukkit.level.generator.terra.delegate.PNXProtoChunk;
+-import cn.nukkit.level.generator.terra.delegate.PNXProtoWorld;
+-import cn.nukkit.level.generator.terra.delegate.PNXServerWorld;
+ import net.minecraft.core.registries.Registries;
+ import net.minecraft.resources.ResourceKey;
+ import net.minecraft.server.MinecraftServer;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.world.level.chunk.ChunkAccess;
+-import net.minecraft.world.level.chunk.ChunkStatus;
++import net.minecraft.world.level.chunk.status.ChunkStatus;
+ import net.minecraft.world.level.dimension.LevelStem;
+-import org.allaymc.api.world.chunk.UnsafeChunk;
+-import org.allaymc.api.world.generator.ChunkGenerateContext;
+-import org.allaymc.api.world.generator.WorldGenerator;
+-import org.allaymc.api.world.generator.WorldGeneratorType;
+-import org.allaymc.jegenerator.utils.AllayChunkUtils;
+ import org.allaymc.jegenerator.utils.PNXChunkUtils;
+ 
+-import java.util.ConcurrentModificationException;
+ import java.util.HashMap;
+-import java.util.Locale;
+ import java.util.concurrent.CompletableFuture;
+ 
+ public class PNXVanillaGenerator extends Generator {
+diff --git a/src/main/java/org/allaymc/jegenerator/commands/DebugChunkCommand.java b/src/main/java/org/allaymc/jegenerator/commands/DebugChunkCommand.java
+index dcad9f4ea930c16c63ff9e3f2f1b91d205576a6c..51a36526274b21ec2c8b67604aa410bcfde616a9 100644
+--- a/src/main/java/org/allaymc/jegenerator/commands/DebugChunkCommand.java
++++ b/src/main/java/org/allaymc/jegenerator/commands/DebugChunkCommand.java
+@@ -1,16 +1,13 @@
+ package org.allaymc.jegenerator.commands;
+ 
+ import com.mojang.brigadier.CommandDispatcher;
+-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+-import com.mojang.brigadier.tree.LiteralCommandNode;
+ import net.minecraft.commands.CommandSourceStack;
+ import net.minecraft.commands.Commands;
+-import net.minecraft.commands.arguments.coordinates.Vec3Argument;
+ import net.minecraft.core.registries.Registries;
+ import net.minecraft.resources.ResourceKey;
+ import net.minecraft.server.MinecraftServer;
+ import net.minecraft.world.level.chunk.ChunkAccess;
+-import net.minecraft.world.level.chunk.ChunkStatus;
++import net.minecraft.world.level.chunk.status.ChunkStatus;
+ import net.minecraft.world.level.dimension.LevelStem;
+ 
+ import java.util.concurrent.atomic.AtomicInteger;
+diff --git a/src/main/java/org/bukkit/craftbukkit/Main.java b/src/main/java/org/bukkit/craftbukkit/Main.java
+index 59ad9f14b07e46694ac41245cd1af9d62720ca06..ba602daa0320eb501b1ff5225817f31365aba81b 100644
+--- a/src/main/java/org/bukkit/craftbukkit/Main.java
++++ b/src/main/java/org/bukkit/craftbukkit/Main.java
+@@ -19,6 +19,7 @@ public class Main {
+     public static final java.time.Instant BOOT_TIME = java.time.Instant.now(); // Paper - track initial start time
+     public static boolean useJline = true;
+     public static boolean useConsole = true;
++    public static String usePlatform;
+ 
+     // Paper start - Reset loggers after shutdown
+     static {
+@@ -29,12 +30,15 @@ public class Main {
+     public static void main(String[] args) {
+         // AllayMC start - custom app arguments
+         if (Boolean.getBoolean("Paper.isRunDev")) {
+-            args = new String[3];
++            args = new String[4];
+             args[0] = "jegenerator";
+             args[1] = "--universe=jegenerator";
+             args[2] = "--nogui";
+         }
++        System.setProperty("com.mojang.eula.agree","true");
++        
+         workPath = args[0];
++        usePlatform = args[1];
+         // AllayMC end
+         
+         // Paper start
