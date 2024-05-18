@@ -18,7 +18,7 @@ repositories {
 dependencies {
     remapper("net.fabricmc:tiny-remapper:0.10.2:fat") // Must be kept in sync with upstream
     decompiler("org.vineflower:vineflower:1.10.1") // Must be kept in sync with upstream
-    paperclip("io.papermc:paperclip:3.0.3") // You probably want this to be kept in sync with upstream
+    paperclip("com.github.allaymc:VanillaGeneratorExtension:b40de85ab8") // You probably want this to be kept in sync with upstream
 }
 
 allprojects {
@@ -47,6 +47,8 @@ subprojects {
     repositories {
         mavenCentral()
         maven("https://jitpack.io/")
+        maven("https://repo.opencollab.dev/maven-releases/")
+        maven("https://repo.opencollab.dev/maven-snapshots/")
         maven(paperMavenPublicUrl)
     }
 }
