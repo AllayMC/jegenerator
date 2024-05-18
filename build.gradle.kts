@@ -19,7 +19,7 @@ repositories {
 dependencies {
     remapper("net.fabricmc:tiny-remapper:0.10.2:fat") // Must be kept in sync with upstream
     decompiler("org.vineflower:vineflower:1.10.1") // Must be kept in sync with upstream
-    paperclip("com.github.allaymc:VanillaGeneratorExtension:8f2ee6e841") // You probably want this to be kept in sync with upstream
+    paperclip(files("C:\\Users\\15425\\IdeaProjects\\VanillaGeneratorExtension\\build\\libs\\VanillaGeneratorExtension-0.0.1.jar")) // You probably want this to be kept in sync with upstream
 }
 
 allprojects {
