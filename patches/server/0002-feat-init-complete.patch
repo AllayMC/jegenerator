@@ -1,0 +1,2384 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: CoolLoong <1542536763@qq.com>
+Date: Sun, 19 May 2024 01:26:31 +0800
+Subject: [PATCH] feat: init complete
+
+
+diff --git a/src/main/java/com/destroystokyo/paper/VersionHistoryManager.java b/src/main/java/com/destroystokyo/paper/VersionHistoryManager.java
+index 660b2ec6b63a4ceffee44ab11f54dfa7c0d0996f..59977562f87f28bca7aeb72be94d566108e7c99d 100644
+--- a/src/main/java/com/destroystokyo/paper/VersionHistoryManager.java
++++ b/src/main/java/com/destroystokyo/paper/VersionHistoryManager.java
+@@ -29,7 +29,8 @@ public enum VersionHistoryManager {
+     private VersionData currentData = null;
+ 
+     VersionHistoryManager() {
+-        final Path path = Paths.get("version_history.json");
++        //final Path path = Paths.get("version_history.json");
++        final Path path = Paths.get(org.bukkit.craftbukkit.Main.getWorkPath(),"version_history.json");// AllayMC - rename to workpath
+ 
+         if (Files.exists(path)) {
+             // Basic file santiy checks
+diff --git a/src/main/java/io/papermc/paper/chunk/system/scheduling/ChunkTaskScheduler.java b/src/main/java/io/papermc/paper/chunk/system/scheduling/ChunkTaskScheduler.java
+index 049e20407033073b06fcdeb46c38485f4926d778..99f9b3b9794d8f4fec7c357fbaf6952c83f81929 100644
+--- a/src/main/java/io/papermc/paper/chunk/system/scheduling/ChunkTaskScheduler.java
++++ b/src/main/java/io/papermc/paper/chunk/system/scheduling/ChunkTaskScheduler.java
+@@ -103,7 +103,7 @@ public final class ChunkTaskScheduler {
+                 thread.setPriority(Thread.NORM_PRIORITY - 2);
+                 thread.setName("Tuinity Chunk System Worker #" + id.intValue());
+                 thread.setUncaughtExceptionHandler(io.papermc.paper.chunk.system.scheduling.NewChunkHolder.CHUNKSYSTEM_UNCAUGHT_EXCEPTION_HANDLER);
+-            }, (long)(20.0e6)); // 20ms
++            }, (long)(100)); // 20ms // 100ms AllayMC
+ 
+         LOGGER.info("Chunk system is using " + newChunkSystemIOThreads + " I/O threads, " + newChunkSystemWorkerThreads + " worker threads, and gen parallelism of " + ChunkTaskScheduler.newChunkSystemGenParallelism + " threads");
+     }
+@@ -869,7 +869,7 @@ public final class ChunkTaskScheduler {
+             }
+ 
+             if (longPrint) {
+-                final File file = new File(new File(new File("."), "debug"), "chunks-watchdog.txt");
++                final File file = new File(new File(new File(org.bukkit.craftbukkit.Main.getWorkPath()), "debug"), "chunks-watchdog.txt");
+                 LOGGER.error("Writing chunk information dump to " + file);
+                 try {
+                     MCUtil.dumpChunks(file, true);
+diff --git a/src/main/java/io/papermc/paper/chunk/system/scheduling/NewChunkHolder.java b/src/main/java/io/papermc/paper/chunk/system/scheduling/NewChunkHolder.java
+index 56b07a3306e5735816c8d89601b519cb0db6379a..da4ed5ddf94ed7e4910583bf3858a9ea22dd44eb 100644
+--- a/src/main/java/io/papermc/paper/chunk/system/scheduling/NewChunkHolder.java
++++ b/src/main/java/io/papermc/paper/chunk/system/scheduling/NewChunkHolder.java
+@@ -821,7 +821,8 @@ public final class NewChunkHolder {
+         final ChunkEntitySlices entityChunk = state.entityChunk();
+         final PoiChunk poiChunk = state.poiChunk();
+ 
+-        final boolean shouldLevelChunkNotSave = (chunk instanceof LevelChunk levelChunk && levelChunk.mustNotSave);
++        //final boolean shouldLevelChunkNotSave = (chunk instanceof LevelChunk levelChunk && levelChunk.mustNotSave);
++        final boolean shouldLevelChunkNotSave = true; // AllayMC - not save chunk
+ 
+         // unload chunk data
+         if (chunk != null) {
+@@ -841,7 +842,8 @@ public final class NewChunkHolder {
+         }
+ 
+         // unload entity data
+-        if (entityChunk != null) {
++        //if (entityChunk != null) {
++        if (false) {// AllayMC - not save entity data
+             this.saveEntities(entityChunk, true);
+             // yes this is a hack to pass the compound tag through...
+             final CompoundTag lastEntityUnload = this.lastEntityUnload;
+@@ -864,7 +866,8 @@ public final class NewChunkHolder {
+         }
+ 
+         // unload poi data
+-        if (poiChunk != null) {
++        //if (poiChunk != null) {
++        if (false) {// AllayMC - not save poi data
+             if (poiChunk.isDirty() && !shouldLevelChunkNotSave) {
+                 this.savePOI(poiChunk, true);
+             } else {
+@@ -1777,7 +1780,8 @@ public final class NewChunkHolder {
+         boolean canSaveChunk = !(chunk instanceof LevelChunk levelChunk && levelChunk.mustNotSave) &&
+                                 (chunk != null && ((shutdown || chunk instanceof LevelChunk) && chunk.isUnsaved()));
+         boolean canSavePOI = !(chunk instanceof LevelChunk levelChunk && levelChunk.mustNotSave) && (poi != null && poi.isDirty());
+-        boolean canSaveEntities = entities != null;
++        //boolean canSaveEntities = entities != null;
++        boolean canSaveEntities = false; // AllayMC - not save any data
+ 
+         try (co.aikar.timings.Timing ignored = this.world.timings.chunkSave.startTiming()) { // Paper
+             if (canSaveChunk) {
+diff --git a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+index 2874bc3001c4e7d9191e47ba512c5a68369c21f1..a1596663bea3b8e527dc4d46301cd5473494720a 100644
+--- a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
++++ b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
+@@ -96,7 +96,8 @@ public class GlobalConfiguration extends ConfigurationPart {
+ 
+     @Deprecated(forRemoval = true)
+     public class Timings extends ConfigurationPart {
+-        public boolean enabled = true;
++        //public boolean enabled = true;
++        public boolean enabled = false; // AllayMC - disable timings
+         public boolean verbose = true;
+         public String url = "https://timings.aikar.co/";
+         public boolean serverNamePrivacy = false;
+@@ -220,8 +221,10 @@ public class GlobalConfiguration extends ConfigurationPart {
+     public class ChunkSystem extends ConfigurationPart {
+ 
+         public int ioThreads = -1;
+-        public int workerThreads = -1;
+-        public String genParallelism = "default";
++        //public int workerThreads = -1;
++        public int workerThreads = Runtime.getRuntime().availableProcessors(); // AllayMC - default Parallelism gen
++        //public String genParallelism = "default";
++        public String genParallelism = "true";// AllayMC - default Parallelism gen
+ 
+         @PostProcess
+         private void postProcess() {
+diff --git a/src/main/java/net/minecraft/commands/Commands.java b/src/main/java/net/minecraft/commands/Commands.java
+index 24086a82e1687cb1925398218b18c2384fa8f6e3..3c7071a928a750df320df16b87d46c9244b7b91d 100644
+--- a/src/main/java/net/minecraft/commands/Commands.java
++++ b/src/main/java/net/minecraft/commands/Commands.java
+@@ -1,5 +1,6 @@
+ package net.minecraft.commands;
+ 
++import cn.allay.jegenerator.commands.DebugChunkCommand; //AllayMC
+ import com.google.common.collect.Maps;
+ import com.mojang.brigadier.ParseResults;
+ import com.mojang.brigadier.StringReader;
+@@ -218,6 +219,7 @@ public class Commands {
+         TriggerCommand.register(this.dispatcher);
+         WeatherCommand.register(this.dispatcher);
+         WorldBorderCommand.register(this.dispatcher);
++        DebugChunkCommand.register(this.dispatcher);
+         if (JvmProfiler.INSTANCE.isAvailable()) {
+             JfrCommand.register(this.dispatcher);
+         }
+diff --git a/src/main/java/net/minecraft/server/Bootstrap.java b/src/main/java/net/minecraft/server/Bootstrap.java
+index 6885a653bfe629c46bface19ff1eb666d74d4f1b..7b7e8b46a06c52aafceac8769380160230ada531 100644
+--- a/src/main/java/net/minecraft/server/Bootstrap.java
++++ b/src/main/java/net/minecraft/server/Bootstrap.java
+@@ -1,5 +1,6 @@
+ package net.minecraft.server;
+ 
++import cn.allay.jegenerator.JeGeneratorMain;// AllayMC
+ import com.mojang.logging.LogUtils;
+ import java.io.PrintStream;
+ import java.time.Duration;
+@@ -83,6 +84,12 @@ public class Bootstrap {
+                     CreativeModeTabs.validate();
+                     Bootstrap.wrapStreams();
+                     Bootstrap.bootstrapDuration.set(Duration.between(instant, Instant.now()).toMillis());
++
++                    // AllayMC start - rundev as debug
++                    if (!Boolean.getBoolean("Paper.isRunDev")) {
++                        JeGeneratorMain.setup();
++                    }
++                    // AllayMC end
+                 }
+                 // CraftBukkit start - easier than fixing the decompile
+                 BlockStateData.register(1008, "{Name:'minecraft:oak_sign',Properties:{rotation:'0'}}", "{Name:'minecraft:standing_sign',Properties:{rotation:'0'}}");
+diff --git a/src/main/java/net/minecraft/server/Main.java b/src/main/java/net/minecraft/server/Main.java
+index 5443013060b62e3bfcc51cddca96d1c0bc59fe72..c69d3a54468eb7d1cfdda4a88de06d170fba2802 100644
+--- a/src/main/java/net/minecraft/server/Main.java
++++ b/src/main/java/net/minecraft/server/Main.java
+@@ -123,12 +123,14 @@ public class Main {
+             Bootstrap.bootStrap();
+             Bootstrap.validate();
+             Util.startTimerHackThread();
+-            Path path1 = Paths.get("server.properties");
++            // Path path1 = Paths.get("server.properties");
++            Path path1 = ((File)optionset.valueOf("config")).toPath();// AllayMC
+             DedicatedServerSettings dedicatedserversettings = new DedicatedServerSettings(optionset); // CraftBukkit - CLI argument support
+ 
+             dedicatedserversettings.forceSave();
+             RegionFileVersion.configure(dedicatedserversettings.getProperties().regionFileComression);
+-            Path path2 = Paths.get("eula.txt");
++            //Path path2 = Paths.get("eula.txt");
++            Path path2 = Paths.get(org.bukkit.craftbukkit.Main.getWorkPath(),"eula.txt");// AllayMC
+             Eula eula = new Eula(path2);
+             // Paper start - load config files early for access below if needed
+             org.bukkit.configuration.file.YamlConfiguration bukkitConfiguration = io.papermc.paper.configuration.PaperConfigurations.loadLegacyConfigFile((File) optionset.valueOf("bukkit-settings"));
+@@ -163,8 +165,10 @@ public class Main {
+             }
+             // Spigot End
+             if (!eula.hasAgreedToEULA() && !eulaAgreed) { // Spigot
+-                Main.LOGGER.info("You need to agree to the EULA in order to run the server. Go to eula.txt for more info.");
+-                return;
++                //Main.LOGGER.info("You need to agree to the EULA in order to run the server. Go to eula.txt for more info."); AllayMC - disable logger
++                System.out.println("You need to agree to the EULA in order to run the server. Go to eula.txt for more info.");
++                //return;
++                System.exit(0); // AllayMC
+             }
+ 
+             // Paper start - Detect headless JRE
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index dbc86b8d4d2af6e5f7e678f2bb77fd39b85c04c5..49119d5cd0fb90a4ca4874a0d0732c4d10b059f7 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -326,10 +326,10 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+         thread.setUncaughtExceptionHandler((thread1, throwable) -> {
+             MinecraftServer.LOGGER.error("Uncaught exception in server thread", throwable);
+         });
+-        thread.setPriority(Thread.NORM_PRIORITY+2); // Paper - Perf: Boost priority
++        /*thread.setPriority(Thread.NORM_PRIORITY+2); // Paper - Perf: Boost priority
+         if (Runtime.getRuntime().availableProcessors() > 4) {
+             thread.setPriority(8);
+-        }
++        }*/ //AllayMC - normal priority
+ 
+         S s0 = serverFactory.apply(thread); // CraftBukkit - decompile error
+ 
+@@ -1172,7 +1172,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+                 LOGGER.info("*************************************************************************************");
+             }
+             // Paper end - Add onboarding message for initial server start
+-
++            System.setProperty("complete_start","true");// AllayMC
+             while (this.running) {
+                 // Paper start - rewrite chunk system
+                 // guarantee that nothing can stop the server from halting if it can at least still tick
+@@ -1545,7 +1545,8 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+     }
+ 
+     public File getServerDirectory() {
+-        return new File(".");
++//        return new File(".");
++                return new File(org.bukkit.craftbukkit.Main.getWorkPath());
+     }
+ 
+     public void onServerCrash(CrashReport report) {}
+diff --git a/src/main/java/net/minecraft/server/Services.java b/src/main/java/net/minecraft/server/Services.java
+index 33e3815a0c979609d4c7ab83ad91e87ac07a556d..d329fb4882571746fc6523c24712da85d9ff65ef 100644
+--- a/src/main/java/net/minecraft/server/Services.java
++++ b/src/main/java/net/minecraft/server/Services.java
+@@ -6,6 +6,7 @@ import com.mojang.authlib.yggdrasil.ServicesKeySet;
+ import com.mojang.authlib.yggdrasil.ServicesKeyType;
+ import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
+ import java.io.File;
++import java.nio.file.Path;
+ import javax.annotation.Nullable;
+ import net.minecraft.server.players.GameProfileCache;
+ import net.minecraft.util.SignatureValidator;
+diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
+index 2eb9c584cc77237f1c82d880a51a3f8b51008d73..b2aab2b64a9259965cd23c51c1306f1ef3e194a4 100644
+--- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
++++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
+@@ -271,7 +271,8 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+         this.initializeKeyPair();
+         DedicatedServer.LOGGER.info("Starting Minecraft server on {}:{}", this.getLocalIp().isEmpty() ? "*" : this.getLocalIp(), this.getPort());
+ 
+-        try {
++        // AllayMC start - not bind ip
++        /*try {
+             this.getConnection().bind(bindAddress); // Paper - Unix domain socket support
+         } catch (IOException ioexception) {
+             DedicatedServer.LOGGER.warn("**** FAILED TO BIND TO PORT!");
+@@ -279,7 +280,9 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+             DedicatedServer.LOGGER.warn("Perhaps a server is already running on that port?");
+             if (true) throw new IllegalStateException("Failed to bind to port", ioexception); // Paper - Propagate failed to bind to port error
+             return false;
+-        }
++        }*/
++        this.getConnection(); // prevent connection is null
++        // AllayMC end
+ 
+         // CraftBukkit start
+         // this.setPlayerList(new DedicatedPlayerList(this, this.registries(), this.playerDataStorage)); // Spigot - moved up
+diff --git a/src/main/java/net/minecraft/server/level/ChunkMap.java b/src/main/java/net/minecraft/server/level/ChunkMap.java
+index 7fb9ba3dadb1eca4a1000ea8cf4d13fed2b7db1e..294686c04e8f2f7ad15585ff5986dce112eed4b1 100644
+--- a/src/main/java/net/minecraft/server/level/ChunkMap.java
++++ b/src/main/java/net/minecraft/server/level/ChunkMap.java
+@@ -1,5 +1,6 @@
+ package net.minecraft.server.level;
+ 
++import cn.allay.jegenerator.chunk.MockThreadedLevelLightEngine; // AllayMC
+ import co.aikar.timings.Timing; // Paper
+ import com.google.common.collect.ImmutableList;
+ import com.google.common.collect.ImmutableList.Builder;
+@@ -290,7 +291,9 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
+         // Paper - rewrite chunk system
+ 
+         // Paper - rewrite chunk system
+-        this.lightEngine = new ThreadedLevelLightEngine(chunkProvider, this, this.level.dimensionType().hasSkyLight(), null, null); // Paper - rewrite chunk system
++        //this.lightEngine = new ThreadedLevelLightEngine(chunkProvider, this, this.level.dimensionType().hasSkyLight(), null, null); // Paper - rewrite chunk system
++        // AllayMC - disable light engine
++        this.lightEngine = new MockThreadedLevelLightEngine(chunkProvider, this, this.level.dimensionType().hasSkyLight(), null, null);
+         this.distanceManager = new ChunkMap.ChunkDistanceManager(executor, mainThreadExecutor);
+         this.overworldDataStorage = persistentStateManagerFactory;
+         this.poiManager = new PoiManager(new RegionStorageInfo(session.getLevelId(), world.dimension(), "poi"), path.resolve("poi"), dataFixer, dsync, iregistrycustom, world);
+diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
+index a2142930b4d4b05987c90496fb9d733d99040aa0..f4cdd18522d187f15a76a51cd2cf1fb0b8c89886 100644
+--- a/src/main/java/net/minecraft/server/players/PlayerList.java
++++ b/src/main/java/net/minecraft/server/players/PlayerList.java
+@@ -125,11 +125,16 @@ import org.bukkit.event.player.PlayerSpawnChangeEvent;
+ // CraftBukkit end
+ 
+ public abstract class PlayerList {
+-
+-    public static final File USERBANLIST_FILE = new File("banned-players.json");
++    // AllayMC start - rename to workpath
++    /*public static final File USERBANLIST_FILE = new File("banned-players.json");
+     public static final File IPBANLIST_FILE = new File("banned-ips.json");
+     public static final File OPLIST_FILE = new File("ops.json");
+-    public static final File WHITELIST_FILE = new File("whitelist.json");
++    public static final File WHITELIST_FILE = new File("whitelist.json");*/
++    public static final File USERBANLIST_FILE = new File(org.bukkit.craftbukkit.Main.getWorkPath(),"banned-players.json");
++    public static final File IPBANLIST_FILE = new File(org.bukkit.craftbukkit.Main.getWorkPath(),"banned-ips.json");
++    public static final File OPLIST_FILE = new File(org.bukkit.craftbukkit.Main.getWorkPath(),"ops.json");
++    public static final File WHITELIST_FILE = new File(org.bukkit.craftbukkit.Main.getWorkPath(),"whitelist.json");
++    // AllayMC end
+     public static final Component CHAT_FILTERED_FULL = Component.translatable("chat.filtered_full");
+     public static final Component DUPLICATE_LOGIN_DISCONNECT_MESSAGE = Component.translatable("multiplayer.disconnect.duplicate_login");
+     private static final Logger LOGGER = LogUtils.getLogger();
+diff --git a/src/main/java/net/minecraft/world/level/chunk/ChunkAccess.java b/src/main/java/net/minecraft/world/level/chunk/ChunkAccess.java
+index 1aac95b03a9e2e37c24f2a30bcb259c1424e1c78..581643be91ee3b74c8d6ac0aa89967bec854ddd6 100644
+--- a/src/main/java/net/minecraft/world/level/chunk/ChunkAccess.java
++++ b/src/main/java/net/minecraft/world/level/chunk/ChunkAccess.java
+@@ -328,7 +328,8 @@ public abstract class ChunkAccess implements BlockGetter, BiomeManager.NoiseBiom
+     }
+ 
+     public boolean isUnsaved() {
+-        return this.unsaved || this.persistentDataContainer.dirty(); // CraftBukkit - SPIGOT-6814: chunk is unsaved if pdc was mutated
++        //return this.unsaved || this.persistentDataContainer.dirty(); // CraftBukkit - SPIGOT-6814: chunk is unsaved if pdc was mutated //AllayMC // AllayMC start - for generator dont save chunk
++        return false;
+     }
+ 
+     public abstract ChunkStatus getStatus();
+diff --git a/src/main/java/net/minecraft/world/level/chunk/ChunkGeneratorStructureState.java b/src/main/java/net/minecraft/world/level/chunk/ChunkGeneratorStructureState.java
+index a6b6e5ea191c0e2cd7a2e4f01b89d8af40a83c1b..0cf01f8ae16884e6f07b0e7cee6731f5ff1ccd5a 100644
+--- a/src/main/java/net/minecraft/world/level/chunk/ChunkGeneratorStructureState.java
++++ b/src/main/java/net/minecraft/world/level/chunk/ChunkGeneratorStructureState.java
+@@ -242,7 +242,6 @@ public class ChunkGeneratorStructureState {
+                 int k1 = (int) Math.round(Math.cos(d0) * d1);
+                 int l1 = (int) Math.round(Math.sin(d0) * d1);
+                 RandomSource randomsource1 = randomsource.fork();
+-
+                 list.add(CompletableFuture.supplyAsync(() -> {
+                     BiomeSource worldchunkmanager = this.biomeSource;
+                     int i2 = SectionPos.sectionToBlockCoord(k1, 8);
+diff --git a/src/main/java/net/minecraft/world/level/chunk/LevelChunk.java b/src/main/java/net/minecraft/world/level/chunk/LevelChunk.java
+index 2a8609e33716949ff1877b6d10f64a9d7a7c81e9..84825628ee22b086e80fab34ca445390107d3310 100644
+--- a/src/main/java/net/minecraft/world/level/chunk/LevelChunk.java
++++ b/src/main/java/net/minecraft/world/level/chunk/LevelChunk.java
+@@ -850,13 +850,16 @@ public class LevelChunk extends ChunkAccess {
+ 
+     @Override
+     public boolean isUnsaved() {
+-        // Paper start - add dirty system to tick lists
++        // AllayMC start - for generator dont save chunk
++        /*// Paper start - add dirty system to tick lists
+         long gameTime = this.level.getLevelData().getGameTime();
+         if (this.blockTicks.isDirty(gameTime) || this.fluidTicks.isDirty(gameTime)) {
+             return true;
+         }
+         // Paper end - add dirty system to tick lists
+-        return super.isUnsaved(); // Paper - rewrite chunk system - do NOT clobber the dirty flag
++        return super.isUnsaved(); // Paper - rewrite chunk system - do NOT clobber the dirty flag*/
++        // AllayMC end
++        return false;
+     }
+     // CraftBukkit end
+ 
+diff --git a/src/main/java/net/minecraft/world/level/chunk/status/ChunkStatusTasks.java b/src/main/java/net/minecraft/world/level/chunk/status/ChunkStatusTasks.java
+index a5e8078b99161272b0f826b8c39e56d17588c264..3e6fdceaaaff048f5d78237f244b015c28a9d3fc 100644
+--- a/src/main/java/net/minecraft/world/level/chunk/status/ChunkStatusTasks.java
++++ b/src/main/java/net/minecraft/world/level/chunk/status/ChunkStatusTasks.java
+@@ -144,9 +144,9 @@ public class ChunkStatusTasks {
+     }
+ 
+     static CompletableFuture<ChunkAccess> generateSpawn(WorldGenContext context, ChunkStatus status, Executor executor, ToFullChunk fullChunkConverter, List<ChunkAccess> chunks, ChunkAccess chunk) {
+-        if (!chunk.isUpgrading()) {
++        /*if (!chunk.isUpgrading()) {
+             context.generator().spawnOriginalMobs(new WorldGenRegion(context.level(), chunks, status, -1));
+-        }
++        }*/ //close entity spwan
+ 
+         return CompletableFuture.completedFuture(chunk);
+     }
+diff --git a/src/main/java/net/minecraft/world/level/levelgen/structure/templatesystem/StructureTemplateManager.java b/src/main/java/net/minecraft/world/level/levelgen/structure/templatesystem/StructureTemplateManager.java
+index 4d9dbf27c7c7d57a06e5f12b7fe30723d2cb69ef..50fb4594f7cc181b0b2921c3367d004cf95d97e2 100644
+--- a/src/main/java/net/minecraft/world/level/levelgen/structure/templatesystem/StructureTemplateManager.java
++++ b/src/main/java/net/minecraft/world/level/levelgen/structure/templatesystem/StructureTemplateManager.java
+@@ -124,11 +124,11 @@ public class StructureTemplateManager {
+     }
+ 
+     private Optional<StructureTemplate> loadFromTestStructures(ResourceLocation id) {
+-        return this.loadFromSnbt(id, Paths.get(StructureUtils.testStructuresDir));
++        return this.loadFromSnbt(id, Paths.get(org.bukkit.craftbukkit.Main.getWorkPath(),StructureUtils.testStructuresDir));
+     }
+ 
+     private Stream<ResourceLocation> listTestStructures() {
+-        return this.listFolderContents(Paths.get(StructureUtils.testStructuresDir), "minecraft", ".snbt");
++        return this.listFolderContents(Paths.get(org.bukkit.craftbukkit.Main.getWorkPath(),StructureUtils.testStructuresDir), "minecraft", ".snbt");
+     }
+ 
+     public Optional<StructureTemplate> loadFromGenerated(ResourceLocation id) {
+diff --git a/src/main/java/org/allaymc/jegenerator/AllayVanillaGenerator.java b/src/main/java/org/allaymc/jegenerator/AllayVanillaGenerator.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..4f8b96225b66783996ee19bb5ba5f06d8fbaa617
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/AllayVanillaGenerator.java
+@@ -0,0 +1,56 @@
++package org.allaymc.jegenerator;
++
++import org.allaymc.api.world.chunk.UnsafeChunk;
++import org.allaymc.api.world.generator.ChunkGenerateContext;
++import org.allaymc.api.world.generator.WorldGenerator;
++import org.allaymc.api.world.generator.WorldGeneratorType;
++import org.allaymc.jegenerator.utils.AllayChunkUtils;
++import net.minecraft.core.registries.Registries;
++import net.minecraft.resources.ResourceKey;
++import net.minecraft.server.MinecraftServer;
++import net.minecraft.server.level.ServerLevel;
++import net.minecraft.world.level.chunk.ChunkAccess;
++import net.minecraft.world.level.chunk.ChunkStatus;
++import net.minecraft.world.level.dimension.LevelStem;
++
++import java.util.Locale;
++import java.util.concurrent.CompletableFuture;
++
++public class AllayVanillaGenerator extends WorldGenerator {
++    final ServerLevel jeLevel;
++    final ResourceKey<LevelStem> dim;
++
++    public AllayVanillaGenerator(int dimId) {
++        super("");
++        switch (dimId) {
++            case 1 -> dim = LevelStem.NETHER;
++            case 2 -> dim = LevelStem.END;
++            default -> dim = LevelStem.OVERWORLD;
++        }
++        jeLevel = MinecraftServer.getServer().getLevel(ResourceKey.create(Registries.DIMENSION, dim.location()));
++    }
++
++    @Override
++    public void generate(ChunkGenerateContext chunkGenerateContext) {
++        final UnsafeChunk chunk = chunkGenerateContext.chunk();
++        ChunkAccess jeChunk = jeLevel.getChunkSource().getChunkAtIfLoadedImmediately(chunk.getX(), chunk.getZ());
++        if (jeChunk == null) {
++            jeChunk = CompletableFuture.supplyAsync(() -> jeLevel.getChunkSource().getChunk(chunk.getX(), chunk.getZ(), ChunkStatus.FULL, true), jeLevel.getChunkSource().mainThreadProcessor).join();
++        }
++        AllayChunkUtils.convertChunk(jeChunk, chunk);
++    }
++
++    @Override
++    public String getGeneratorName() {
++        return "JEGenerator_" + dim.location().getPath().toUpperCase(Locale.ENGLISH);
++    }
++
++    @Override
++    public WorldGeneratorType getType() {
++        return switch (dim.location().getPath()) {
++            case "the_nether" -> WorldGeneratorType.NETHER;
++            case "the_end" -> WorldGeneratorType.THE_END;
++            default -> WorldGeneratorType.INFINITE;
++        };
++    }
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/MockThreadedLevelLightEngine.java b/src/main/java/org/allaymc/jegenerator/MockThreadedLevelLightEngine.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..ef031a012aedc9eb58a89b61f81c30b2e9f6d328
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/MockThreadedLevelLightEngine.java
+@@ -0,0 +1,65 @@
++package org.allaymc.jegenerator;
++
++import net.minecraft.core.BlockPos;
++import net.minecraft.core.SectionPos;
++import net.minecraft.server.level.ChunkMap;
++import net.minecraft.server.level.ChunkTaskPriorityQueueSorter;
++import net.minecraft.server.level.ThreadedLevelLightEngine;
++import net.minecraft.util.thread.ProcessorHandle;
++import net.minecraft.util.thread.ProcessorMailbox;
++import net.minecraft.world.level.ChunkPos;
++import net.minecraft.world.level.LightLayer;
++import net.minecraft.world.level.chunk.DataLayer;
++import net.minecraft.world.level.chunk.LightChunkGetter;
++import org.jetbrains.annotations.Nullable;
++
++import java.util.Set;
++import java.util.function.Consumer;
++import java.util.function.IntConsumer;
++
++public class MockThreadedLevelLightEngine extends ThreadedLevelLightEngine {
++    public MockThreadedLevelLightEngine(LightChunkGetter chunkProvider, ChunkMap chunkStorage, boolean hasBlockLight, ProcessorMailbox<Runnable> processor, ProcessorHandle<ChunkTaskPriorityQueueSorter.Message<Runnable>> executor) {
++        super(chunkProvider, chunkStorage, hasBlockLight, processor, executor);
++    }
++
++    @Override
++    public int relight(Set<ChunkPos> chunks_param, Consumer<ChunkPos> chunkLightCallback, IntConsumer onComplete) {
++        return 0;
++    }
++
++    @Override
++    public boolean hasLightWork() {
++        return false;
++    }
++
++    @Override
++    public int getRawBrightness(BlockPos pos, int ambientDarkness) {
++        return 15;
++    }
++
++    @Override
++    public void checkBlock(BlockPos pos) {
++    }
++
++    @Override
++    protected void updateChunkStatus(ChunkPos pos) {
++    }
++
++    @Override
++    public void propagateLightSources(ChunkPos chunkPos) {
++
++    }
++
++    @Override
++    public void setLightEnabled(ChunkPos pos, boolean retainData) {
++    }
++
++    @Override
++    public void queueSectionData(LightLayer lightType, SectionPos pos, @Nullable DataLayer nibbles) {
++    }
++
++    @Override
++    public void retainData(ChunkPos pos, boolean retainData) {
++
++    }
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/PNXVanillaGenerator.java b/src/main/java/org/allaymc/jegenerator/PNXVanillaGenerator.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..9cb7c0a4be24e51fc3b44567155dcb639554ce68
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/PNXVanillaGenerator.java
+@@ -0,0 +1,79 @@
++package org.allaymc.jegenerator;
++
++import cn.nukkit.Server;
++import cn.nukkit.level.DimensionData;
++import cn.nukkit.level.DimensionEnum;
++import cn.nukkit.level.format.ChunkState;
++import cn.nukkit.level.format.IChunk;
++import cn.nukkit.level.generator.GenerateStage;
++import cn.nukkit.level.generator.Generator;
++import cn.nukkit.level.generator.terra.TerraGenerator;
++import cn.nukkit.level.generator.terra.delegate.PNXProtoChunk;
++import cn.nukkit.level.generator.terra.delegate.PNXProtoWorld;
++import cn.nukkit.level.generator.terra.delegate.PNXServerWorld;
++import net.minecraft.core.registries.Registries;
++import net.minecraft.resources.ResourceKey;
++import net.minecraft.server.MinecraftServer;
++import net.minecraft.server.level.ServerLevel;
++import net.minecraft.world.level.chunk.ChunkAccess;
++import net.minecraft.world.level.chunk.ChunkStatus;
++import net.minecraft.world.level.dimension.LevelStem;
++import org.allaymc.api.world.chunk.UnsafeChunk;
++import org.allaymc.api.world.generator.ChunkGenerateContext;
++import org.allaymc.api.world.generator.WorldGenerator;
++import org.allaymc.api.world.generator.WorldGeneratorType;
++import org.allaymc.jegenerator.utils.AllayChunkUtils;
++import org.allaymc.jegenerator.utils.PNXChunkUtils;
++
++import java.util.ConcurrentModificationException;
++import java.util.HashMap;
++import java.util.Locale;
++import java.util.concurrent.CompletableFuture;
++
++public class PNXVanillaGenerator extends Generator {
++    final ServerLevel jeLevel;
++    final ResourceKey<LevelStem> dim;
++
++    public PNXVanillaGenerator(int dimId) {
++        super(DimensionEnum.getDataFromId(dimId),new HashMap<>());
++        switch (dimId) {
++            case -1 -> dim = LevelStem.NETHER;
++            case 1 -> dim = LevelStem.END;
++            default -> dim = LevelStem.OVERWORLD;
++        }
++        jeLevel = MinecraftServer.getServer().getLevel(ResourceKey.create(Registries.DIMENSION, dim.location()));
++    }
++    
++    @Override
++    public void stages(GenerateStage.Builder builder) {
++        builder.start(new VanillaStage());
++    }
++
++    @Override
++    public String getName() {
++        return "vanilla";
++    }
++
++    class VanillaStage extends GenerateStage {
++        @Override
++        public void apply(cn.nukkit.level.generator.ChunkGenerateContext context) {
++            final IChunk chunk = context.getChunk();
++            ChunkAccess jeChunk = jeLevel.getChunkSource().getChunkAtIfLoadedImmediately(chunk.getX(), chunk.getZ());
++            if (jeChunk == null) {
++                jeChunk = CompletableFuture.supplyAsync(() -> jeLevel.getChunkSource().getChunk(chunk.getX(), chunk.getZ(), ChunkStatus.FULL, true), jeLevel.getChunkSource().mainThreadProcessor).join();
++            }
++            PNXChunkUtils.convertChunk(jeChunk, chunk);
++            if (Server.getInstance().getConfig("chunk-ticking.light-updates", true)) {
++                chunk.recalculateHeightMap();
++                chunk.populateSkyLight();
++                chunk.setLightPopulated();
++            }
++            chunk.setChunkState(ChunkState.FINISHED);
++        }
++
++        @Override
++        public String name() {
++            return "vanilla_generator_stage";
++        }
++    }
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/VanillaGeneratorExtension.java b/src/main/java/org/allaymc/jegenerator/VanillaGeneratorExtension.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..bfed9fb7ac3ba042bec8989c1b7ad5895f946826
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/VanillaGeneratorExtension.java
+@@ -0,0 +1,40 @@
++package org.allaymc.jegenerator;
++
++import cn.nukkit.level.generator.Generator;
++import net.minecraft.obfuscate.DontObfuscate;
++import org.allaymc.api.world.generator.WorldGenerator;
++
++@DontObfuscate
++public final class VanillaGeneratorExtension {
++    public static void setup() {
++        try {
++            Class.forName("org.allaymc.jegenerator.mappings.MappingRegistries");
++        } catch (ClassNotFoundException e) {
++            throw new RuntimeException(e);
++        }
++    }
++
++    public static WorldGenerator allay_overworld() {
++        return new AllayVanillaGenerator(0);
++    }
++
++    public static WorldGenerator allay_nether() {
++        return new AllayVanillaGenerator(1);
++    }
++
++    public static WorldGenerator allay_end() {
++        return new AllayVanillaGenerator(2);
++    }
++
++    public static Generator pnx_overworld() {
++        return new PNXVanillaGenerator(0);
++    }
++
++    public static Generator pnx_nether() {
++        return new PNXVanillaGenerator(1);
++    }
++
++    public static Generator pnx_end() {
++        return new PNXVanillaGenerator(2);
++    }
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/commands/DebugChunkCommand.java b/src/main/java/org/allaymc/jegenerator/commands/DebugChunkCommand.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..dcad9f4ea930c16c63ff9e3f2f1b91d205576a6c
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/commands/DebugChunkCommand.java
+@@ -0,0 +1,37 @@
++package org.allaymc.jegenerator.commands;
++
++import com.mojang.brigadier.CommandDispatcher;
++import com.mojang.brigadier.builder.LiteralArgumentBuilder;
++import com.mojang.brigadier.tree.LiteralCommandNode;
++import net.minecraft.commands.CommandSourceStack;
++import net.minecraft.commands.Commands;
++import net.minecraft.commands.arguments.coordinates.Vec3Argument;
++import net.minecraft.core.registries.Registries;
++import net.minecraft.resources.ResourceKey;
++import net.minecraft.server.MinecraftServer;
++import net.minecraft.world.level.chunk.ChunkAccess;
++import net.minecraft.world.level.chunk.ChunkStatus;
++import net.minecraft.world.level.dimension.LevelStem;
++
++import java.util.concurrent.atomic.AtomicInteger;
++
++public class DebugChunkCommand {
++    public DebugChunkCommand() {
++    }
++
++    static AtomicInteger i = new AtomicInteger(0);
++
++    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
++        dispatcher.register(Commands.literal("dc").executes((commandcontext) -> {
++                long l = System.currentTimeMillis();
++                var level = MinecraftServer.getServer().getLevel(ResourceKey.create(Registries.DIMENSION, LevelStem.OVERWORLD.location()));
++                ChunkAccess jeChunk = level.getChunkSource().getChunkAtIfLoadedImmediately(i.get(),i.get());
++                if (jeChunk == null) {
++                    level.getChunkSource().getChunk(i.get(), i.get(), ChunkStatus.FULL, true);
++                }
++                i.getAndIncrement();
++                System.out.println("time cost : " + (System.currentTimeMillis() - l) + " ms");
++                return 0;
++            }));
++    }
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/AbstractMappedRegistry.java b/src/main/java/org/allaymc/jegenerator/mappings/AbstractMappedRegistry.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..edf48887b3bddf3f09db6b050339181e5c2aec13
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/mappings/AbstractMappedRegistry.java
+@@ -0,0 +1,76 @@
++package org.allaymc.jegenerator.mappings;
++
++
++import org.allaymc.api.registry.RegistryLoader;
++
++import javax.annotation.Nullable;
++import java.util.Map;
++import java.util.Optional;
++import java.util.function.Function;
++
++/**
++ * An abstract registry holding a map of various registrations as defined by {@link M}.
++ * The M represents the map class, which can be anything that extends {@link Map}. The
++ * {@link K} and {@link V} generics are the key and value respectively.
++ *
++ * @param <K> the key
++ * @param <V> the value
++ * @param <M> the map
++ */
++public abstract class AbstractMappedRegistry<K, V, M extends Map<K, V>> extends MappingRegistry<M> {
++    protected <I> AbstractMappedRegistry(I input, RegistryLoader<I, M> registryLoader) {
++        super(input, registryLoader);
++    }
++
++    /**
++     * Returns the value registered by the given key.
++     *
++     * @param key the key
++     * @return the value registered by the given key.
++     */
++    @Nullable
++    public V get(K key) {
++        return this.mappings.get(key);
++    }
++
++    /**
++     * Returns and maps the value by the given key if present.
++     *
++     * @param key the key
++     * @param mapper the mapper
++     * @param <U> the type
++     * @return the mapped value from the given key if present
++     */
++    public <U> Optional<U> map(K key, Function<? super V, ? extends U> mapper) {
++        V value = this.get(key);
++        if (value == null) {
++            return Optional.empty();
++        } else {
++            return Optional.ofNullable(mapper.apply(value));
++        }
++    }
++
++    /**
++     * Returns the value registered by the given key or the default value
++     * specified if null.
++     *
++     * @param key the key
++     * @param defaultValue the default value
++     * @return the value registered by the given key or the default value
++     *         specified if null.
++     */
++    public V getOrDefault(K key, V defaultValue) {
++        return this.mappings.getOrDefault(key, defaultValue);
++    }
++
++    /**
++     * Registers a new value into this registry with the given key.
++     *
++     * @param key the key
++     * @param value the value
++     * @return a new value into this registry with the given key.
++     */
++    public V register(K key, V value) {
++        return this.mappings.put(key, value);
++    }
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/ArrayMappingRegistry.java b/src/main/java/org/allaymc/jegenerator/mappings/ArrayMappingRegistry.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..dd29ef3b4b21febce2b288a8f2a4f140d17d5f67
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/mappings/ArrayMappingRegistry.java
+@@ -0,0 +1,126 @@
++package org.allaymc.jegenerator.mappings;
++
++import org.allaymc.api.registry.RegistryLoader;
++
++import javax.annotation.Nullable;
++import java.util.function.Supplier;
++
++/**
++ * An array registry that stores mappings as an array defined by {@link M}.
++ * The M represents the value that is to be stored as part of this array.
++ *
++ * @param <M> the mapping type
++ */
++public class ArrayMappingRegistry<M> extends MappingRegistry<M[]> {
++
++    /**
++     * Creates a new array registry of this class with the given input and
++     * {@link RegistryLoader}. The input specified is what the registry
++     * loader needs to take in.
++     *
++     * @param input the input
++     * @param registryLoader the registry loader
++     */
++    protected <I> ArrayMappingRegistry(I input, RegistryLoader<I, M[]> registryLoader) {
++        super(input, registryLoader);
++    }
++
++    /**
++     * Returns the value registered by the given index.
++     *
++     * @param index the index
++     * @return the value registered by the given index.
++     */
++    @Nullable
++    public M get(int index) {
++        if (index >= this.mappings.length) {
++            return null;
++        }
++
++        return this.mappings[index];
++    }
++
++    /**
++     * Returns the value registered by the given index or the default value
++     * specified if null.
++     *
++     * @param index the index
++     * @param defaultValue the default value
++     * @return the value registered by the given key or the default value
++     *         specified if null.
++     */
++    public M getOrDefault(int index, M defaultValue) {
++        M value = this.get(index);
++        if (value == null) {
++            return defaultValue;
++        }
++
++        return value;
++    }
++
++    /**
++     * Registers a new value into this registry with the given index.
++     *
++     * @param index the index
++     * @param value the value
++     * @return a new value into this registry with the given index.
++     */
++    public M register(int index, M value) {
++        return this.mappings[index] = value;
++    }
++
++    /**
++     * Creates a new array registry with the given {@link RegistryLoader} supplier. The
++     * input type is not specified here, meaning the loader return type is either
++     * predefined, or the registry is populated at a later point.
++     *
++     * @param registryLoader the registry loader supplier
++     * @param <I> the input type
++     * @param <M> the returned mappings type
++     * @return a new registry with the given RegistryLoader supplier
++     */
++    public static <I, M> ArrayMappingRegistry<M> create(Supplier<RegistryLoader<I, M[]>> registryLoader) {
++        return new ArrayMappingRegistry<>(null, registryLoader.get());
++    }
++
++    /**
++     * Creates a new array registry with the given {@link RegistryLoader} supplier
++     * and input.
++     *
++     * @param input the input
++     * @param registryLoader the registry loader supplier
++     * @param <I> the input type
++     * @param <M> the returned mappings type
++     * @return a new registry with the given RegistryLoader supplier
++     */
++    public static <I, M> ArrayMappingRegistry<M> create(I input, Supplier<RegistryLoader<I, M[]>> registryLoader) {
++        return new ArrayMappingRegistry<>(input, registryLoader.get());
++    }
++
++    /**
++     * Creates a new array registry with the given {@link RegistryLoader}. The
++     * input type is not specified here, meaning the loader return type is either
++     * predefined, or the registry is populated at a later point.
++     *
++     * @param registryLoader the registry loader
++     * @param <I> the input type
++     * @param <M> the returned mappings type
++     * @return a new registry with the given RegistryLoader supplier
++     */
++    public static <I, M> ArrayMappingRegistry<M> create(RegistryLoader<I, M[]> registryLoader) {
++        return new ArrayMappingRegistry<>(null, registryLoader);
++    }
++
++    /**
++     * Creates a new array registry with the given {@link RegistryLoader} and input.
++     *
++     * @param input the input
++     * @param registryLoader the registry loader
++     * @param <I> the input type
++     * @param <M> the returned mappings type
++     * @return a new registry with the given RegistryLoader supplier
++     */
++    public static <I, M> ArrayMappingRegistry<M> create(I input, RegistryLoader<I, M[]> registryLoader) {
++        return new ArrayMappingRegistry<>(input, registryLoader);
++    }
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/IRegistry.java b/src/main/java/org/allaymc/jegenerator/mappings/IRegistry.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..3a8ae779012eb5ba94f9dbdebdf57e29887f33e3
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/mappings/IRegistry.java
+@@ -0,0 +1,35 @@
++package org.allaymc.jegenerator.mappings;
++
++import java.util.function.Consumer;
++
++/**
++ * Represents a registry.
++ *
++ * @param <M> the value being held by the registry
++ */
++interface IRegistry<M> {
++
++    /**
++     * Gets the underlying value held by this registry.
++     *
++     * @return the underlying value held by this registry.
++     */
++    M get();
++
++    /**
++     * Sets the underlying value held by this registry.
++     * Clears any existing data associated with the previous
++     * value.
++     *
++     * @param mappings the underlying value held by this registry
++     */
++    void set(M mappings);
++
++    /**
++     * Registers what is specified in the given
++     * {@link Consumer} into the underlying value.
++     *
++     * @param consumer the consumer
++     */
++    void register(Consumer<M> consumer);
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/MappedMappingRegistry.java b/src/main/java/org/allaymc/jegenerator/mappings/MappedMappingRegistry.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..4cb13c0d38af959ffc4032a6053850c0b466a5aa
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/mappings/MappedMappingRegistry.java
+@@ -0,0 +1,82 @@
++package org.allaymc.jegenerator.mappings;
++
++import org.allaymc.api.registry.RegistryLoader;
++
++import java.util.Map;
++import java.util.function.Supplier;
++
++/**
++ * An public registry holding a map of various registrations as defined by {@link M}.
++ * The M represents the map class, which can be anything that extends {@link Map}. The
++ * {@link K} and {@link V} generics are the key and value respectively.
++ *
++ * @param <K> the key
++ * @param <V> the value
++ * @param <M> the map
++ */
++public class MappedMappingRegistry<K, V, M extends Map<K, V>> extends AbstractMappedRegistry<K, V, M> {
++    protected <I> MappedMappingRegistry(I input, RegistryLoader<I, M> registryLoader) {
++        super(input, registryLoader);
++    }
++
++    /**
++     * Creates a new mapped registry with the given {@link RegistryLoader}. The
++     * input type is not specified here, meaning the loader return type is either
++     * predefined, or the registry is populated at a later point.
++     *
++     * @param registryLoader the registry loader
++     * @param <I> the input
++     * @param <K> the map key
++     * @param <V> the map value
++     * @param <M> the returned mappings type, a map in this case
++     * @return a new registry with the given RegistryLoader
++     */
++    public static <I, K, V, M extends Map<K, V>> MappedMappingRegistry<K, V, M> create(RegistryLoader<I, M> registryLoader) {
++        return new MappedMappingRegistry<>(null, registryLoader);
++    }
++
++    /**
++     * Creates a new mapped registry with the given {@link RegistryLoader} and input.
++     *
++     * @param input the input
++     * @param registryLoader the registry loader
++     * @param <I> the input
++     * @param <K> the map key
++     * @param <V> the map value
++     * @param <M> the returned mappings type, a map in this case
++     * @return a new registry with the given RegistryLoader
++     */
++    public static <I, K, V, M extends Map<K, V>> MappedMappingRegistry<K, V, M> create(I input, RegistryLoader<I, M> registryLoader) {
++        return new MappedMappingRegistry<>(input, registryLoader);
++    }
++
++    /**
++     * Creates a new mapped registry with the given {@link RegistryLoader} supplier.
++     * The input type is not specified here, meaning the loader return type is either
++     * predefined, or the registry is populated at a later point.
++     *
++     * @param registryLoader the registry loader supplier
++     * @param <I> the input
++     * @param <K> the map key
++     * @param <V> the map value
++     * @param <M> the returned mappings type, a map in this case
++     * @return a new registry with the given RegistryLoader supplier
++     */
++    public static <I, K, V, M extends Map<K, V>> MappedMappingRegistry<K, V, M> create(Supplier<RegistryLoader<I, M>> registryLoader) {
++        return new MappedMappingRegistry<>(null, registryLoader.get());
++    }
++
++    /**
++     * Creates a new mapped registry with the given {@link RegistryLoader} and input.
++     *
++     * @param registryLoader the registry loader
++     * @param <I> the input
++     * @param <K> the map key
++     * @param <V> the map value
++     * @param <M> the returned mappings type, a map in this case
++     * @return a new registry with the given RegistryLoader supplier
++     */
++    public static <I, K, V, M extends Map<K, V>> MappedMappingRegistry<K, V, M> create(I input, Supplier<RegistryLoader<I, M>> registryLoader) {
++        return new MappedMappingRegistry<>(input, registryLoader.get());
++    }
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/MappingRegistries.java b/src/main/java/org/allaymc/jegenerator/mappings/MappingRegistries.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..fcc49abae7732e6669c32c749177a10231547d7b
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/mappings/MappingRegistries.java
+@@ -0,0 +1,46 @@
++package org.allaymc.jegenerator.mappings;
++
++import org.allaymc.jegenerator.mappings.populator.BiomeRegistryLoader;
++import org.allaymc.jegenerator.mappings.populator.BlockRegistryPopulator;
++import org.allaymc.jegenerator.mappings.type.AllayBlockMappings;
++import com.fasterxml.jackson.core.JsonParser;
++import com.fasterxml.jackson.databind.DeserializationFeature;
++import com.fasterxml.jackson.databind.ObjectMapper;
++import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
++import org.allaymc.jegenerator.mappings.type.PNXBlockMappings;
++import org.checkerframework.checker.units.qual.A;
++
++public class MappingRegistries {
++    public static final ObjectMapper JSON_MAPPER = new ObjectMapper()
++        .enable(JsonParser.Feature.IGNORE_UNDEFINED)
++        .enable(JsonParser.Feature.ALLOW_COMMENTS)
++        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
++        .enable(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES)
++        .enable(JsonParser.Feature.ALLOW_SINGLE_QUOTES);
++
++    /**
++     * A mapped registry which stores Java biome identifiers and their Bedrock biome identifier.
++     */
++    public static final SimpleMappingRegistry<Int2IntArrayMap> BIOME = SimpleMappingRegistry.create("mappings/biomes.json", BiomeRegistryLoader::new);
++
++    /**
++     * A versioned registry which holds {@link AllayBlockMappings} for each version. These block mappings contain
++     * primarily Bedrock version-specific data.
++     */
++    public static final AllayBlockMappings ALLAY_BLOCKS;
++    public static final PNXBlockMappings PNX_BLOCKS;
++
++    static {
++        Object object = BlockRegistryPopulator.registerBedrockBlocks();
++        if (object instanceof AllayBlockMappings allayBlockMappings) {
++            ALLAY_BLOCKS = allayBlockMappings;
++            PNX_BLOCKS = null;
++        } else if (object instanceof PNXBlockMappings pnxBlockMappings) {
++            ALLAY_BLOCKS = null;
++            PNX_BLOCKS = pnxBlockMappings;
++        } else {
++            ALLAY_BLOCKS = null;
++            PNX_BLOCKS = null;
++        }
++    }
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/MappingRegistry.java b/src/main/java/org/allaymc/jegenerator/mappings/MappingRegistry.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..1a8414167d4268d0ad0da96523a80ad07ab12f13
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/mappings/MappingRegistry.java
+@@ -0,0 +1,90 @@
++package org.allaymc.jegenerator.mappings;
++
++
++import org.allaymc.api.registry.RegistryLoader;
++
++import java.util.function.Consumer;
++
++/**
++ * A wrapper around a value which is loaded based on the output from the provided
++ * {@link RegistryLoader}. This class is primarily designed to hold a registration
++ * of some kind, however no limits are set on what it can hold, as long as the
++ * specified RegistryLoader returns the same value type that is specified in the
++ * generic.
++ *
++ * <p>
++ * Below, a RegistryLoader is taken in the constructor. RegistryLoaders have two
++ * generic types: the input, and the output. The input is what it takes in, whether
++ * it be a string which references to a file, or nothing more than an integer. The
++ * output is what it generates based on the input, and should be the same type as
++ * the {@link M} generic specified in the registry.
++ *
++ * <p>
++ * Registries can be very simple to create. Here is an example that simply parses a
++ * number given a string:
++ *
++ * <pre>
++ * {@code
++ *     public static final SimpleRegistry<Integer> STRING_TO_INT = SimpleRegistry.create("5", Integer::parseInt);
++ * }
++ * </pre>
++ *
++ * <p>
++ * This is a simple example which really wouldn't have much of a practical use,
++ * however it demonstrates a fairly basic use case of how this system works. Typically
++ * though, the first parameter would be a location of some sort, such as a file path
++ * where the loader will load the mappings from. The NBT registry is a good reference
++ * point for something both simple and practical. See {@link MappingRegistries#BIOMES_NBT} and
++ * {@link org.geysermc.geyser.registry.loader.NbtRegistryLoader}.
++ *
++ * @param <M> the value being held by the registry
++ */
++public abstract class MappingRegistry<M> implements IRegistry<M> {
++    protected M mappings;
++
++    /**
++     * Creates a new instance of this class with the given input and
++     * {@link RegistryLoader}. The input specified is what the registry
++     * loader needs to take in.
++     *
++     * @param input the input
++     * @param registryLoader the registry loader
++     * @param <I> the input type
++     */
++    protected <I> MappingRegistry(I input, RegistryLoader<I, M> registryLoader) {
++        this.mappings = registryLoader.load(input);
++    }
++
++    /**
++     * Gets the underlying value held by this registry.
++     *
++     * @return the underlying value held by this registry.
++     */
++    @Override
++    public M get() {
++        return this.mappings;
++    }
++
++    /**
++     * Sets the underlying value held by this registry.
++     * Clears any existing data associated with the previous
++     * value.
++     *
++     * @param mappings the underlying value held by this registry
++     */
++    @Override
++    public void set(M mappings) {
++        this.mappings = mappings;
++    }
++
++    /**
++     * Registers what is specified in the given
++     * {@link Consumer} into the underlying value.
++     *
++     * @param consumer the consumer
++     */
++    @Override
++    public void register(Consumer<M> consumer) {
++        consumer.accept(this.mappings);
++    }
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/SimpleMappedRegistry.java b/src/main/java/org/allaymc/jegenerator/mappings/SimpleMappedRegistry.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..d1e4e4b5fd9779a601cf003ec9d7fe661e0778a5
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/mappings/SimpleMappedRegistry.java
+@@ -0,0 +1,78 @@
++package org.allaymc.jegenerator.mappings;
++
++
++import org.allaymc.api.registry.RegistryLoader;
++
++import java.util.Map;
++import java.util.function.Supplier;
++
++/**
++ * A variant of {@link AbstractMappedRegistry} with {@link Map} as the defined type. Unlike
++ * {@link MappedMappingRegistry}, this registry does not support specifying your own Map class,
++ * and only permits operations the {@link Map} interface does, unless you manually cast.
++ *
++ * @param <K> the key
++ * @param <V> the value
++ */
++public class SimpleMappedRegistry<K, V> extends AbstractMappedRegistry<K, V, Map<K, V>> {
++    protected <I> SimpleMappedRegistry(I input, RegistryLoader<I, Map<K, V>> registryLoader) {
++        super(input, registryLoader);
++    }
++
++    /**
++     * Creates a new mapped registry with the given {@link RegistryLoader}. The
++     * input type is not specified here, meaning the loader return type is either
++     * predefined, or the registry is populated at a later point.
++     *
++     * @param registryLoader the registry loader
++     * @param <I> the input
++     * @param <K> the map key
++     * @param <V> the map value
++     * @return a new registry with the given RegistryLoader
++     */
++    public static <I, K, V> SimpleMappedRegistry<K, V> create(RegistryLoader<I, Map<K, V>> registryLoader) {
++        return new SimpleMappedRegistry<>(null, registryLoader);
++    }
++
++    /**
++     * Creates a new mapped registry with the given {@link RegistryLoader} and input.
++     *
++     * @param input the input
++     * @param registryLoader the registry loader
++     * @param <I> the input
++     * @param <K> the map key
++     * @param <V> the map value
++     * @return a new registry with the given RegistryLoader
++     */
++    public static <I, K, V> SimpleMappedRegistry<K, V> create(I input, RegistryLoader<I, Map<K, V>> registryLoader) {
++        return new SimpleMappedRegistry<>(input, registryLoader);
++    }
++
++    /**
++     * Creates a new mapped registry with the given {@link RegistryLoader} supplier.
++     * The input type is not specified here, meaning the loader return type is either
++     * predefined, or the registry is populated at a later point.
++     *
++     * @param registryLoader the registry loader supplier
++     * @param <I> the input
++     * @param <K> the map key
++     * @param <V> the map value
++     * @return a new registry with the given RegistryLoader supplier
++     */
++    public static <I, K, V> SimpleMappedRegistry<K, V> create(Supplier<RegistryLoader<I, Map<K, V>>> registryLoader) {
++        return new SimpleMappedRegistry<>(null, registryLoader.get());
++    }
++
++    /**
++     * Creates a new mapped registry with the given {@link RegistryLoader} and input.
++     *
++     * @param registryLoader the registry loader
++     * @param <I> the input
++     * @param <K> the map key
++     * @param <V> the map value
++     * @return a new registry with the given RegistryLoader supplier
++     */
++    public static <I, K, V> SimpleMappedRegistry<K, V> create(I input, Supplier<RegistryLoader<I, Map<K, V>>> registryLoader) {
++        return new SimpleMappedRegistry<>(input, registryLoader.get());
++    }
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/SimpleMappingRegistry.java b/src/main/java/org/allaymc/jegenerator/mappings/SimpleMappingRegistry.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..566977082c1bbee69cafc2a8dca501628a5b2d4e
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/mappings/SimpleMappingRegistry.java
+@@ -0,0 +1,74 @@
++package org.allaymc.jegenerator.mappings;
++
++
++import org.allaymc.api.registry.RegistryLoader;
++
++import java.util.function.Supplier;
++
++/**
++ * A simple registry with no defined mapping or input type. Designed to allow
++ * for simple registrations of any given type without restrictions on what
++ * the input or output can be.
++ *
++ * @param <M> the value being held by the registry
++ */
++public class SimpleMappingRegistry<M> extends MappingRegistry<M> {
++    private <I> SimpleMappingRegistry(I input, RegistryLoader<I, M> registryLoader) {
++        super(input, registryLoader);
++    }
++
++    /**
++     * Creates a new registry with the given {@link RegistryLoader} supplier. The
++     * input type is not specified here, meaning the loader return type is either
++     * predefined, or the registry is populated at a later point.
++     *
++     * @param registryLoader the registry loader supplier
++     * @param <I> the input type
++     * @param <M> the returned mappings type
++     * @return a new registry with the given RegistryLoader supplier
++     */
++    public static <I, M> SimpleMappingRegistry<M> create(Supplier<RegistryLoader<I, M>> registryLoader) {
++        return new SimpleMappingRegistry<>(null, registryLoader.get());
++    }
++
++    /**
++     * Creates a new registry with the given {@link RegistryLoader} supplier
++     * and input.
++     *
++     * @param input the input
++     * @param registryLoader the registry loader supplier
++     * @param <I> the input type
++     * @param <M> the returned mappings type
++     * @return a new registry with the given RegistryLoader supplier
++     */
++    public static <I, M> SimpleMappingRegistry<M> create(I input, Supplier<RegistryLoader<I, M>> registryLoader) {
++        return new SimpleMappingRegistry<>(input, registryLoader.get());
++    }
++
++    /**
++     * Creates a new registry with the given {@link RegistryLoader}. The
++     * input type is not specified here, meaning the loader return type is either
++     * predefined, or the registry is populated at a later point.
++     *
++     * @param registryLoader the registry loader
++     * @param <I> the input type
++     * @param <M> the returned mappings type
++     * @return a new registry with the given RegistryLoader supplier
++     */
++    public static <I, M> SimpleMappingRegistry<M> create(RegistryLoader<I, M> registryLoader) {
++        return new SimpleMappingRegistry<>(null, registryLoader);
++    }
++
++    /**
++     * Creates a new registry with the given {@link RegistryLoader} and input.
++     *
++     * @param input the input
++     * @param registryLoader the registry loader
++     * @param <I> the input type
++     * @param <M> the returned mappings type
++     * @return a new registry with the given RegistryLoader supplier
++     */
++    public static <I, M> SimpleMappingRegistry<M> create(I input, RegistryLoader<I, M> registryLoader) {
++        return new SimpleMappingRegistry<>(input, registryLoader);
++    }
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/VersionedMappingRegistry.java b/src/main/java/org/allaymc/jegenerator/mappings/VersionedMappingRegistry.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..1a91daa8a5701f9bbc1d702d3cb8c8a66af52bb6
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/mappings/VersionedMappingRegistry.java
+@@ -0,0 +1,101 @@
++package org.allaymc.jegenerator.mappings;
++
++import org.allaymc.api.registry.RegistryLoader;
++import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
++
++import java.util.Map;
++import java.util.function.Supplier;
++
++/**
++ * A versioned, mapped registry. Like {@link SimpleMappedRegistry}, the {@link Map} interface is
++ * not able to be specified here, but unlike it, it does not have support for specialized
++ * instances, and ONLY supports {@link Int2ObjectMap} for optimal performance to prevent boxing
++ * of integers.
++ *
++ * @param <V> the value
++ */
++public class VersionedMappingRegistry<V> extends AbstractMappedRegistry<Integer, V, Int2ObjectMap<V>> {
++    protected <I> VersionedMappingRegistry(I input, RegistryLoader<I, Int2ObjectMap<V>> registryLoader) {
++        super(input, registryLoader);
++    }
++
++    /**
++     * Gets the closest value for the specified version. Only
++     * returns versions higher up than the specified if one
++     * does not exist for the given one. Useful in the event
++     * that you want to get a resource which is guaranteed for
++     * older versions, but not on newer ones.
++     *
++     * @param version the version
++     * @return the closest value for the specified version
++     */
++    public V forVersion(int version) {
++        Int2ObjectMap.Entry<V> current = null;
++        for (Int2ObjectMap.Entry<V> entry : this.mappings.int2ObjectEntrySet()) {
++            int currentVersion = entry.getIntKey();
++            if (version < currentVersion) {
++                continue;
++            }
++            if (version == currentVersion) {
++                return entry.getValue();
++            }
++            if (current == null || current.getIntKey() < currentVersion) {
++                // This version is newer and should be prioritized
++                current = entry;
++            }
++        }
++        return current == null ? null : current.getValue();
++    }
++
++    /**
++     * Creates a new versioned registry with the given {@link RegistryLoader}. The
++     * input type is not specified here, meaning the loader return type is either
++     * predefined, or the registry is populated at a later point.
++     *
++     * @param registryLoader the registry loader
++     * @param <I> the input
++     * @param <V> the map value
++     * @return a new registry with the given RegistryLoader
++     */
++    public static <I, V> VersionedMappingRegistry<V> create(RegistryLoader<I, Int2ObjectMap<V>> registryLoader) {
++        return new VersionedMappingRegistry<>(null, registryLoader);
++    }
++
++    /**
++     * Creates a new versioned registry with the given {@link RegistryLoader} and input.
++     *
++     * @param registryLoader the registry loader
++     * @param <I> the input
++     * @param <V> the map value
++     * @return a new registry with the given RegistryLoader
++     */
++    public static <I, V> VersionedMappingRegistry<V> create(I input, RegistryLoader<I, Int2ObjectMap<V>> registryLoader) {
++        return new VersionedMappingRegistry<>(input, registryLoader);
++    }
++
++    /**
++     * Creates a new versioned registry with the given {@link RegistryLoader} supplier.
++     * The input type is not specified here, meaning the loader return type is either
++     * predefined, or the registry is populated at a later point.
++     *
++     * @param registryLoader the registry loader
++     * @param <I> the input
++     * @param <V> the map value
++     * @return a new registry with the given RegistryLoader supplier
++     */
++    public static <I, V> VersionedMappingRegistry< V> create(Supplier<RegistryLoader<I, Int2ObjectMap<V>>> registryLoader) {
++        return new VersionedMappingRegistry<>(null, registryLoader.get());
++    }
++
++    /**
++     * Creates a new versioned registry with the given {@link RegistryLoader} supplier and input.
++     *
++     * @param registryLoader the registry loader
++     * @param <I> the input
++     * @param <V> the map value
++     * @return a new registry with the given RegistryLoader supplier
++     */
++    public static <I, V> VersionedMappingRegistry< V> create(I input, Supplier<RegistryLoader<I, Int2ObjectMap<V>>> registryLoader) {
++        return new VersionedMappingRegistry<>(input, registryLoader.get());
++    }
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/loader/NbtRegistryLoader.java b/src/main/java/org/allaymc/jegenerator/mappings/loader/NbtRegistryLoader.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..64efc709c0e840c216b0f891cb442fc57d2a469e
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/mappings/loader/NbtRegistryLoader.java
+@@ -0,0 +1,19 @@
++package org.allaymc.jegenerator.mappings.loader;
++
++import org.allaymc.api.registry.RegistryLoader;
++import net.minecraft.server.Main;
++import org.cloudburstmc.nbt.NBTInputStream;
++import org.cloudburstmc.nbt.NbtMap;
++import org.cloudburstmc.nbt.NbtUtils;
++
++public class NbtRegistryLoader implements RegistryLoader<String, NbtMap> {
++
++    @Override
++    public NbtMap load(String input) {
++        try (NBTInputStream nbtInputStream = NbtUtils.createNetworkReader(Main.class.getClassLoader().getResourceAsStream(input), true, true)) {
++            return (NbtMap) nbtInputStream.readTag();
++        } catch (Exception e) {
++            throw new AssertionError("Failed to load registrations for " + input, e);
++        }
++    }
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/loader/RegistryLoaders.java b/src/main/java/org/allaymc/jegenerator/mappings/loader/RegistryLoaders.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..68b10efea529903dd99f3dcea95465a3417847f2
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/mappings/loader/RegistryLoaders.java
+@@ -0,0 +1,40 @@
++package org.allaymc.jegenerator.mappings.loader;
++
++import org.allaymc.api.registry.RegistryLoader;
++import org.jetbrains.annotations.NotNull;
++
++import java.util.function.Supplier;
++
++public final class RegistryLoaders {
++    /**
++     * The {@link RegistryLoader} responsible for loading NBT.
++     */
++    public static final NbtRegistryLoader NBT = new NbtRegistryLoader();
++
++    /**
++     * Wraps the surrounding {@link Supplier} in a {@link RegistryLoader} which does
++     * not take in any input value.
++     *
++     * @param supplier the supplier
++     * @param <V> the value
++     * @return a RegistryLoader wrapping the given Supplier
++     */
++    public static <V> RegistryLoader<Object, V> empty(@NotNull Supplier<V> supplier) {
++        return input -> supplier.get();
++    }
++
++    /**
++     * Returns a {@link RegistryLoader} which has not taken
++     * in any input value.
++     *
++     * @param <I> the input
++     * @param <V> the value
++     * @return a RegistryLoader that is yet to contain a value.
++     */
++    public static <I, V> RegistryLoader<I, V> uninitialized() {
++        return input -> null;
++    }
++
++    private RegistryLoaders() {
++    }
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/populator/BiomeRegistryLoader.java b/src/main/java/org/allaymc/jegenerator/mappings/populator/BiomeRegistryLoader.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..4df722e9273124198c30b2c10038ee4b99bfe317
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/mappings/populator/BiomeRegistryLoader.java
+@@ -0,0 +1,104 @@
++/*
++ * Copyright (c) 2019-2022 GeyserMC. http://geysermc.org
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a copy
++ * of this software and associated documentation files (the "Software"), to deal
++ * in the Software without restriction, including without limitation the rights
++ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++ * copies of the Software, and to permit persons to whom the Software is
++ * furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
++ * THE SOFTWARE.
++ *
++ * @author GeyserMC
++ * @link https://github.com/GeyserMC/Geyser
++ */
++
++package org.allaymc.jegenerator.mappings.populator;
++
++import org.allaymc.api.registry.RegistryLoader;
++import org.allaymc.jegenerator.mappings.MappingRegistries;
++import com.fasterxml.jackson.annotation.JsonProperty;
++import com.fasterxml.jackson.core.type.TypeReference;
++import com.google.common.util.concurrent.MoreExecutors;
++import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
++import net.minecraft.commands.Commands;
++import net.minecraft.core.LayeredRegistryAccess;
++import net.minecraft.core.registries.Registries;
++import net.minecraft.resources.RegistryDataLoader;
++import net.minecraft.resources.ResourceLocation;
++import net.minecraft.server.Main;
++import net.minecraft.server.RegistryLayer;
++import net.minecraft.server.ReloadableServerResources;
++import net.minecraft.server.WorldLoader;
++import net.minecraft.server.packs.PackType;
++import net.minecraft.server.packs.repository.Pack;
++import net.minecraft.server.packs.repository.PackRepository;
++import net.minecraft.server.packs.repository.ServerPacksSource;
++import net.minecraft.server.packs.resources.MultiPackResourceManager;
++import net.minecraft.world.flag.FeatureFlags;
++
++import java.io.IOException;
++import java.io.InputStream;
++import java.util.Map;
++
++public class BiomeRegistryLoader implements RegistryLoader<String, Int2IntArrayMap> {
++
++    @Override
++    public Int2IntArrayMap load(String input) {
++        // Populate available packs
++        PackRepository resourceRepository = ServerPacksSource.createVanillaTrustedRepository();
++        resourceRepository.reload();
++        // Set up resource manager
++        MultiPackResourceManager resourceManager = new MultiPackResourceManager(PackType.SERVER_DATA, resourceRepository.getAvailablePacks().stream().map(Pack::open).toList());
++        LayeredRegistryAccess<RegistryLayer> layers = RegistryLayer.createRegistryAccess();
++        layers = WorldLoader.loadAndReplaceLayer(resourceManager, layers, RegistryLayer.WORLDGEN, RegistryDataLoader.WORLDGEN_REGISTRIES);
++        var REGISTRY_CUSTOM = layers.compositeAccess().freeze();
++        // Register vanilla pack
++        var DATA_PACK = ReloadableServerResources.loadResources(resourceManager, REGISTRY_CUSTOM, FeatureFlags.REGISTRY.allFlags(), Commands.CommandSelection.DEDICATED, 0, MoreExecutors.directExecutor(), MoreExecutors.directExecutor()).join();
++        // Bind tags
++        DATA_PACK.updateRegistryTags(REGISTRY_CUSTOM);
++        // Biome shortcut
++        var biomeRegistry = REGISTRY_CUSTOM.registryOrThrow(Registries.BIOME);
++
++        // As of Bedrock Edition 1.17.10 with the experimental toggle, any unmapped biome identifier sent to the client
++        // crashes the client. Therefore, we need to have a list of all valid Bedrock biome IDs with which we can use from.
++        // The server sends the corresponding Java network IDs, so we don't need to worry about that now.
++
++        // Reference variable for Jackson to read off of
++        TypeReference<Map<String, BiomeEntry>> biomeEntriesType = new TypeReference<>() {
++        };
++        Map<String, BiomeEntry> biomeEntries;
++
++        try (InputStream stream = Main.class.getClassLoader().getResourceAsStream("bedrock/biomes.json")) {
++            biomeEntries = MappingRegistries.JSON_MAPPER.readValue(stream, biomeEntriesType);
++        } catch (IOException e) {
++            throw new AssertionError("Unable to load Bedrock runtime biomes", e);
++        }
++
++        Int2IntArrayMap biomes = new Int2IntArrayMap(biomeRegistry.size());
++        for (Map.Entry<String, BiomeEntry> biome : biomeEntries.entrySet()) {
++            // Java Edition integer ID -> Bedrock integer ID
++            int id = biomeRegistry.getId(biomeRegistry.get(new ResourceLocation(biome.getKey())));
++            biomes.put(id, biome.getValue().bedrockId);
++        }
++        return biomes;
++    }
++
++    private static class BiomeEntry {
++        /**
++         * The Bedrock network ID for this biome.
++         */
++        @JsonProperty("bedrock_id")
++        private int bedrockId;
++    }
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/populator/BlockRegistryPopulator.java b/src/main/java/org/allaymc/jegenerator/mappings/populator/BlockRegistryPopulator.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..5864ddb2e6a7a55b2ac4d5ec46e970e1a844b085
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/mappings/populator/BlockRegistryPopulator.java
+@@ -0,0 +1,221 @@
++package org.allaymc.jegenerator.mappings.populator;
++
++import cn.nukkit.registry.Registries;
++import org.allaymc.api.block.palette.BlockStateHashPalette;
++import org.allaymc.jegenerator.mappings.MappingRegistries;
++import org.allaymc.jegenerator.mappings.type.BedrockBlockDefinition;
++import org.allaymc.jegenerator.mappings.type.AllayBlockMappings;
++import com.fasterxml.jackson.databind.JsonNode;
++import com.google.common.collect.Interner;
++import com.google.common.collect.Interners;
++import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
++import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
++import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
++import net.minecraft.server.Main;
++import org.allaymc.jegenerator.mappings.type.PNXBlockMappings;
++import org.cloudburstmc.blockstateupdater.*;
++import org.cloudburstmc.blockstateupdater.util.TagUtils;
++import org.cloudburstmc.blockstateupdater.util.tagupdater.CompoundTagUpdaterContext;
++import org.cloudburstmc.nbt.NBTInputStream;
++import org.cloudburstmc.nbt.NbtMap;
++import org.cloudburstmc.nbt.NbtMapBuilder;
++import org.cloudburstmc.nbt.NbtType;
++import org.jetbrains.annotations.NotNull;
++
++import java.io.DataInputStream;
++import java.io.InputStream;
++import java.util.ArrayList;
++import java.util.Iterator;
++import java.util.List;
++import java.util.Map;
++import java.util.zip.GZIPInputStream;
++
++import static net.minecraft.world.level.block.Block.BLOCK_STATE_REGISTRY;
++
++/**
++ * Populates the block registries.
++ */
++public final class BlockRegistryPopulator {
++    @FunctionalInterface
++    private interface Remapper {
++
++        NbtMap remap(NbtMap tag);
++
++        static Remapper of(BlockStateUpdater... updaters) {
++            CompoundTagUpdaterContext context = new CompoundTagUpdaterContext();
++            for (BlockStateUpdater updater : updaters) {
++                updater.registerUpdaters(context);
++            }
++
++            return tag -> {
++                NbtMapBuilder updated = context.update(tag, 0).toBuilder();
++                updated.remove("version"); // we already removed this, but the context adds it. remove it again.
++                return updated.build();
++            };
++        }
++    }
++
++
++    public static Object registerBedrockBlocks() {
++        Remapper mapper = Remapper.of(
++            BlockStateUpdater_1_20_10.INSTANCE,
++            BlockStateUpdater_1_20_30.INSTANCE,
++            BlockStateUpdater_1_20_40.INSTANCE,
++            BlockStateUpdater_1_20_50.INSTANCE,
++            BlockStateUpdater_1_20_60.INSTANCE,
++            BlockStateUpdater_1_20_70.INSTANCE,
++            BlockStateUpdater_1_20_80.INSTANCE
++        );
++
++        // We can keep this strong as nothing should be garbage collected
++        // Safe to intern since Cloudburst NBT is immutable
++        Interner<NbtMap> statesInterner = Interners.newStrongInterner();
++
++        List<NbtMap> vanillaBlockStates;
++        List<NbtMap> blockStates;
++        try (InputStream stream = Main.class.getClassLoader().getResourceAsStream("bedrock/block_palette.1_20_80.nbt");
++             NBTInputStream nbtInputStream = new NBTInputStream(new DataInputStream(new GZIPInputStream(stream)), true, true)) {
++            NbtMap blockPalette = (NbtMap) nbtInputStream.readTag();
++
++            vanillaBlockStates = new ArrayList<>(blockPalette.getList("blocks", NbtType.COMPOUND));
++            for (int i = 0; i < vanillaBlockStates.size(); i++) {
++                NbtMapBuilder builder = vanillaBlockStates.get(i).toBuilder();
++                builder.remove("version"); // Remove all nbt tags which are not needed for differentiating states
++                builder.remove("name_hash"); // Quick workaround - was added in 1.19.20
++                builder.putCompound("states", statesInterner.intern((NbtMap) builder.remove("states")));
++                vanillaBlockStates.set(i, builder.build());
++            }
++
++            blockStates = new ArrayList<>(vanillaBlockStates);
++        } catch (Exception e) {
++            throw new AssertionError("Unable to get blocks from runtime block states", e);
++        }
++
++        Object2ObjectMap<NbtMap, BedrockBlockDefinition> blockStateOrderedMap = new Object2ObjectOpenHashMap<>(blockStates.size());
++        Int2ObjectOpenHashMap<BedrockBlockDefinition> bedrockRuntimeMap = new Int2ObjectOpenHashMap<>(blockStates.size());
++        for (int i = 0; i < blockStates.size(); i++) {
++            NbtMap tag = blockStates.get(i);
++            if (blockStateOrderedMap.containsKey(tag)) {
++                throw new AssertionError("Duplicate block states in Bedrock palette: " + tag);
++            }
++            Map<String, Object> mutable = (Map<String, Object>) TagUtils.toMutable(tag);
++            Integer networkId = (Integer) mutable.remove("network_id");
++            NbtMap nbtMap = NbtMap.fromMap(mutable);
++            BedrockBlockDefinition block = new BedrockBlockDefinition(networkId, nbtMap);
++            blockStateOrderedMap.put(nbtMap, block);
++            bedrockRuntimeMap.put(networkId.intValue(), block);
++        }
++
++        if (org.bukkit.craftbukkit.Main.usePlatform.equals("allay")) {
++            return registerAllayBedrockBlocks(mapper, blockStateOrderedMap);
++        } else if (org.bukkit.craftbukkit.Main.usePlatform.equals("pnx")) {
++            return registerPNXBedrockBlocks(mapper, blockStateOrderedMap);
++        }
++        return null;
++    }
++
++    private static PNXBlockMappings registerPNXBedrockBlocks(Remapper mapper, Object2ObjectMap<NbtMap, BedrockBlockDefinition> blockStateOrderedMap) {
++        cn.nukkit.block.BlockState[] blocks = new cn.nukkit.block.BlockState[BLOCK_STATE_REGISTRY.size()];
++        JsonNode blocksJson;
++        try (InputStream stream = Main.class.getClassLoader().getResourceAsStream("bedrock/blocks.json")) {
++            blocksJson = MappingRegistries.JSON_MAPPER.readTree(stream);
++        } catch (Exception e) {
++            throw new AssertionError("Unable to load Java block mappings", e);
++        }
++        Iterator<Map.Entry<String, JsonNode>> blocksIterator = blocksJson.fields();
++        cn.nukkit.block.BlockState airDefinition = null;
++        cn.nukkit.block.BlockState flowWaterDefinition = null;
++        int javaRuntimeId = -1;
++        while (blocksIterator.hasNext()) {
++            javaRuntimeId++;
++            Map.Entry<String, JsonNode> entry = blocksIterator.next();
++            String javaId = entry.getKey();
++            NbtMap bedrockTag = buildBedrockState(entry.getValue());
++            NbtMap remapBedrockTag = mapper.remap(bedrockTag);
++            BedrockBlockDefinition vanillaBedrockDefinition = blockStateOrderedMap.get(remapBedrockTag);
++            if (vanillaBedrockDefinition != null) {
++                blocks[javaRuntimeId] = Registries.BLOCKSTATE.get(vanillaBedrockDefinition.getRuntimeId());
++                switch (javaId) {
++                    case "minecraft:air" -> {
++                        airDefinition = Registries.BLOCKSTATE.get(vanillaBedrockDefinition.getRuntimeId());
++                    }
++                    case "minecraft:water[level=15]" ->
++                        flowWaterDefinition = Registries.BLOCKSTATE.get(vanillaBedrockDefinition.getRuntimeId());
++                }
++            } else {
++                blocks[javaRuntimeId] = null;
++            }
++        }
++        return PNXBlockMappings.builder()
++            .bedrockAir(airDefinition)
++            .bedrockWater(flowWaterDefinition)
++            .blockMappings(blocks)
++            .build();
++    }
++
++    private static AllayBlockMappings registerAllayBedrockBlocks(Remapper mapper, Object2ObjectMap<NbtMap, BedrockBlockDefinition> blockStateOrderedMap) {
++        org.allaymc.api.block.type.BlockState[] blocks = new org.allaymc.api.block.type.BlockState[BLOCK_STATE_REGISTRY.size()];
++        JsonNode blocksJson;
++        try (InputStream stream = Main.class.getClassLoader().getResourceAsStream("bedrock/blocks.json")) {
++            blocksJson = MappingRegistries.JSON_MAPPER.readTree(stream);
++        } catch (Exception e) {
++            throw new AssertionError("Unable to load Java block mappings", e);
++        }
++        Iterator<Map.Entry<String, JsonNode>> blocksIterator = blocksJson.fields();
++        org.allaymc.api.block.type.BlockState airDefinition = null;
++        org.allaymc.api.block.type.BlockState flowWaterDefinition = null;
++        int javaRuntimeId = -1;
++        while (blocksIterator.hasNext()) {
++            javaRuntimeId++;
++            Map.Entry<String, JsonNode> entry = blocksIterator.next();
++            String javaId = entry.getKey();
++            NbtMap bedrockTag = buildBedrockState(entry.getValue());
++            NbtMap remapBedrockTag = mapper.remap(bedrockTag);
++            BedrockBlockDefinition vanillaBedrockDefinition = blockStateOrderedMap.get(remapBedrockTag);
++            if (vanillaBedrockDefinition != null) {
++                blocks[javaRuntimeId] = BlockStateHashPalette.getRegistry().get(vanillaBedrockDefinition.getRuntimeId());
++                switch (javaId) {
++                    case "minecraft:air" -> {
++                        airDefinition = BlockStateHashPalette.getRegistry().get(vanillaBedrockDefinition.getRuntimeId());
++                    }
++                    case "minecraft:water[level=15]" ->
++                        flowWaterDefinition = BlockStateHashPalette.getRegistry().get(vanillaBedrockDefinition.getRuntimeId());
++                }
++            } else {
++                blocks[javaRuntimeId] = null;
++            }
++        }
++        return AllayBlockMappings.builder()
++            .bedrockAir(airDefinition)
++            .bedrockWater(flowWaterDefinition)
++            .blockMappings(blocks)
++            .build();
++    }
++
++    @NotNull
++    private static NbtMap buildBedrockState(JsonNode node) {
++        NbtMapBuilder tagBuilder = NbtMap.builder();
++        String bedrockIdentifier = node.get("bedrock_identifier").textValue();
++        tagBuilder.putString("name", bedrockIdentifier);
++
++        NbtMapBuilder statesBuilder = NbtMap.builder();
++
++        // check for states
++        JsonNode states = node.get("bedrock_states");
++        if (states != null) {
++            Iterator<Map.Entry<String, JsonNode>> statesIterator = states.fields();
++
++            while (statesIterator.hasNext()) {
++                Map.Entry<String, JsonNode> stateEntry = statesIterator.next();
++                JsonNode stateValue = stateEntry.getValue();
++                switch (stateValue.getNodeType()) {
++                    case BOOLEAN -> statesBuilder.putBoolean(stateEntry.getKey(), stateValue.booleanValue());
++                    case STRING -> statesBuilder.putString(stateEntry.getKey(), stateValue.textValue());
++                    case NUMBER -> statesBuilder.putInt(stateEntry.getKey(), stateValue.intValue());
++                }
++            }
++        }
++        tagBuilder.put("states", statesBuilder.build());
++        return tagBuilder.build();
++    }
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/type/AllayBlockMappings.java b/src/main/java/org/allaymc/jegenerator/mappings/type/AllayBlockMappings.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..3a6fabd6b9bae7eda142fdd566dfa6e5fb7a94a6
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/mappings/type/AllayBlockMappings.java
+@@ -0,0 +1,27 @@
++package org.allaymc.jegenerator.mappings.type;
++
++
++import lombok.Builder;
++import lombok.Value;
++import net.minecraft.world.level.block.Block;
++import net.minecraft.world.level.block.state.BlockState;
++
++@Builder
++@Value
++public class AllayBlockMappings {
++    org.allaymc.api.block.type.BlockState bedrockAir;
++    org.allaymc.api.block.type.BlockState bedrockWater;
++    org.allaymc.api.block.type.BlockState[] blockMappings;
++
++    public org.allaymc.api.block.type.BlockState getBedrockBlock(int javaRuntimeId) {
++        if (javaRuntimeId < 0 || javaRuntimeId >= this.blockMappings.length) {
++            return bedrockAir;
++        }
++        org.allaymc.api.block.type.BlockState blockMapping = this.blockMappings[javaRuntimeId];
++        return blockMapping == null ? bedrockAir : blockMapping;
++    }
++
++    public org.allaymc.api.block.type.BlockState getBedrockBlock(BlockState jeBlockState) {
++        return getBedrockBlock(Block.BLOCK_STATE_REGISTRY.getId(jeBlockState));
++    }
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/type/BedrockBlockDefinition.java b/src/main/java/org/allaymc/jegenerator/mappings/type/BedrockBlockDefinition.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..741a6846bbe09a9ff934c6198eed4e959723aae0
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/mappings/type/BedrockBlockDefinition.java
+@@ -0,0 +1,31 @@
++package org.allaymc.jegenerator.mappings.type;
++
++import lombok.Getter;
++import org.cloudburstmc.nbt.NbtMap;
++import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
++
++public class BedrockBlockDefinition implements BlockDefinition {
++    private final int blockHash;
++
++    @Getter
++    private final NbtMap state;
++
++    public BedrockBlockDefinition(int blockHash, NbtMap state) {
++        this.blockHash = blockHash;
++        this.state = state;
++    }
++
++    /**
++     *
++     * @return blockHash It is not RuntimeID just for implements
++     */
++    @Override
++    public int getRuntimeId() {
++        return blockHash;
++    }
++
++    @Override
++    public String toString() {
++        return "BedrockBlock{" + state.getString("name") + "}";
++    }
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/type/BlockMapping.java b/src/main/java/org/allaymc/jegenerator/mappings/type/BlockMapping.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..121f98bd93c3e70a527eb3e8a4071ca42544ea76
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/mappings/type/BlockMapping.java
+@@ -0,0 +1,61 @@
++package org.allaymc.jegenerator.mappings.type;
++
++import org.allaymc.jegenerator.utils.BlockUtils;
++import lombok.Builder;
++import lombok.Value;
++
++import javax.annotation.Nullable;
++
++@Builder
++@Value
++public class BlockMapping {
++
++    public static BlockMapping DEFAULT = BlockMapping.builder().javaIdentifier("minecraft:air").build();
++
++    String javaIdentifier;
++
++    int javaBlockId;
++
++    float hardness;
++    boolean canBreakWithHand;
++
++    /**
++     * The index of this collision in collision.json
++     */
++    int collisionIndex;
++    @Nullable
++    String pickItem;
++
++    /**
++     * @return the identifier without the additional block states
++     */
++    public String getCleanJavaIdentifier() {
++        return BlockUtils.getCleanIdentifier(javaIdentifier);
++    }
++
++    /**
++     * @return the corresponding Java identifier for this item
++     */
++    public String getItemIdentifier() {
++        if (pickItem != null && !pickItem.equals("minecraft:air")) {
++            // Spawners can have air as their pick item which we are not interested in.
++            return pickItem;
++        }
++
++        return getCleanJavaIdentifier();
++    }
++
++    /**
++     * Get the item a Java client would receive when pressing
++     * the Pick Block key on a specific Java block state.
++     *
++     * @return The Java identifier of the item
++     */
++    public String getPickItem() {
++        if (pickItem != null) {
++            return pickItem;
++        }
++
++        return getCleanJavaIdentifier();
++    }
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/type/PNXBlockMappings.java b/src/main/java/org/allaymc/jegenerator/mappings/type/PNXBlockMappings.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..b88e690cf9c312d8a89657b96350c52b1a9ed453
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/mappings/type/PNXBlockMappings.java
+@@ -0,0 +1,27 @@
++package org.allaymc.jegenerator.mappings.type;
++
++
++import lombok.Builder;
++import lombok.Value;
++import net.minecraft.world.level.block.Block;
++import net.minecraft.world.level.block.state.BlockState;
++
++@Builder
++@Value
++public class PNXBlockMappings {
++    cn.nukkit.block.BlockState bedrockAir;
++    cn.nukkit.block.BlockState bedrockWater;
++    cn.nukkit.block.BlockState[] blockMappings;
++
++    public cn.nukkit.block.BlockState getBedrockBlock(int javaRuntimeId) {
++        if (javaRuntimeId < 0 || javaRuntimeId >= this.blockMappings.length) {
++            return bedrockAir;
++        }
++        cn.nukkit.block.BlockState blockMapping = this.blockMappings[javaRuntimeId];
++        return blockMapping == null ? bedrockAir : blockMapping;
++    }
++
++    public cn.nukkit.block.BlockState getBedrockBlock(BlockState jeBlockState) {
++        return getBedrockBlock(Block.BLOCK_STATE_REGISTRY.getId(jeBlockState));
++    }
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/utils/AllayChunkUtils.java b/src/main/java/org/allaymc/jegenerator/utils/AllayChunkUtils.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..557e5fabd298fbaf05c87896564f6430a8bf51a1
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/utils/AllayChunkUtils.java
+@@ -0,0 +1,58 @@
++package org.allaymc.jegenerator.utils;
++
++import org.allaymc.api.data.VanillaBiomeId;
++import org.allaymc.api.world.chunk.UnsafeChunk;
++import org.allaymc.jegenerator.mappings.MappingRegistries;
++import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
++import net.minecraft.core.BlockPos;
++import net.minecraft.core.Holder;
++import net.minecraft.core.Registry;
++import net.minecraft.core.registries.Registries;
++import net.minecraft.nbt.CompoundTag;
++import net.minecraft.server.MinecraftServer;
++import net.minecraft.tags.FluidTags;
++import net.minecraft.world.level.biome.Biome;
++import net.minecraft.world.level.block.state.BlockState;
++import net.minecraft.world.level.block.state.properties.BlockStateProperties;
++import net.minecraft.world.level.chunk.ChunkAccess;
++import net.minecraft.world.level.levelgen.Heightmap;
++
++public class AllayChunkUtils {
++    private static final org.allaymc.api.block.type.BlockState WATER = MappingRegistries.ALLAY_BLOCKS.getBedrockWater();
++    private static final Registry<Biome> BIOME_REGISTRY = MinecraftServer.getServer().registryAccess().registryOrThrow(Registries.BIOME);
++    private static final Int2IntArrayMap BIOME_MAPPINGS = MappingRegistries.BIOME.get();
++
++    public static void convertChunk(final ChunkAccess input, final UnsafeChunk output) {
++        if (input == null) {
++            System.out.println(output.getX() + ":" + output.getZ() + " convert is null!");
++            return;
++        }
++        for (int x = 0; x < 16; x++) {
++            for (int z = 0; z < 16; z++) {
++                for (int y = input.getMinBuildHeight(); y < input.getMaxBuildHeight(); y++) {
++                    Holder<Biome> noiseBiome = input.getNoiseBiome(x >> 2, y >> 2, z >> 2);
++                    int id = BIOME_REGISTRY.getId(noiseBiome.value());
++                    int biome = BIOME_MAPPINGS.getOrDefault(id, 1);
++                    output.setBiome(x, y, z, VanillaBiomeId.fromId(biome));
++
++                    CompoundTag blockEntityNBT = input.getBlockEntityNbtForSaving(new BlockPos((input.locX << 4) + x, y, (input.locZ << 4) + z));
++                    //todo translate blockEntity NBT and block
++                    if (blockEntityNBT != null) {
++                        continue;
++                    }
++
++                    BlockState blockState = input.getBlockState(x, y, z);
++                    boolean hasWater = blockState.getFluidState().is(FluidTags.WATER) || (blockState.hasProperty(BlockStateProperties.WATERLOGGED) && blockState.getValue(BlockStateProperties.WATERLOGGED));
++                    org.allaymc.api.block.type.BlockState bedrockBlock = MappingRegistries.ALLAY_BLOCKS.getBedrockBlock(blockState);
++                    output.setBlockState(x, y, z, bedrockBlock);
++                    if (hasWater) {
++                        output.setBlockState(x, y, z, WATER, 1);
++                    }
++                }
++
++                int height = input.getHeight(Heightmap.Types.WORLD_SURFACE, x, z);
++                output.setHeight(x, z, height);
++            }
++        }
++    }
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/utils/BlockUtils.java b/src/main/java/org/allaymc/jegenerator/utils/BlockUtils.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..0f4f89ab44c4719711f3f085d120ee44c7e1fcce
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/utils/BlockUtils.java
+@@ -0,0 +1,12 @@
++package org.allaymc.jegenerator.utils;
++
++public class BlockUtils {
++    public static String getCleanIdentifier(String fullJavaIdentifier) {
++        int stateIndex = fullJavaIdentifier.indexOf('[');
++        if (stateIndex == -1) {
++            // Identical to its clean variation
++            return fullJavaIdentifier;
++        }
++        return fullJavaIdentifier.substring(0, stateIndex);
++    }
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/utils/PNXChunkUtils.java b/src/main/java/org/allaymc/jegenerator/utils/PNXChunkUtils.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..9682942058be1206615a50ea005204cc761f7a0e
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/utils/PNXChunkUtils.java
+@@ -0,0 +1,59 @@
++package org.allaymc.jegenerator.utils;
++
++import cn.nukkit.level.format.IChunk;
++import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
++import net.minecraft.core.BlockPos;
++import net.minecraft.core.Holder;
++import net.minecraft.core.Registry;
++import net.minecraft.core.registries.Registries;
++import net.minecraft.nbt.CompoundTag;
++import net.minecraft.server.MinecraftServer;
++import net.minecraft.tags.FluidTags;
++import net.minecraft.world.level.biome.Biome;
++import net.minecraft.world.level.block.state.BlockState;
++import net.minecraft.world.level.block.state.properties.BlockStateProperties;
++import net.minecraft.world.level.chunk.ChunkAccess;
++import net.minecraft.world.level.levelgen.Heightmap;
++import org.allaymc.api.data.VanillaBiomeId;
++import org.allaymc.api.world.chunk.UnsafeChunk;
++import org.allaymc.jegenerator.mappings.MappingRegistries;
++
++public class PNXChunkUtils {
++    private static final cn.nukkit.block.BlockState WATER = MappingRegistries.PNX_BLOCKS.getBedrockWater();
++    private static final Registry<Biome> BIOME_REGISTRY = MinecraftServer.getServer().registryAccess().registryOrThrow(Registries.BIOME);
++    private static final Int2IntArrayMap BIOME_MAPPINGS = MappingRegistries.BIOME.get();
++
++    public static void convertChunk(final ChunkAccess input, final IChunk output) {
++        if (input == null) {
++            System.out.println(output.getX() + ":" + output.getZ() + " convert is null!");
++            return;
++        }
++        for (int x = 0; x < 16; x++) {
++            for (int z = 0; z < 16; z++) {
++                for (int y = input.getMinBuildHeight(); y < input.getMaxBuildHeight(); y++) {
++                    Holder<Biome> noiseBiome = input.getNoiseBiome(x >> 2, y >> 2, z >> 2);
++                    int id = BIOME_REGISTRY.getId(noiseBiome.value());
++                    int biome = BIOME_MAPPINGS.getOrDefault(id, 1);
++                    output.setBiomeId(x, y, z, biome);
++
++                    CompoundTag blockEntityNBT = input.getBlockEntityNbtForSaving(new BlockPos((input.locX << 4) + x, y, (input.locZ << 4) + z));
++                    //todo translate blockEntity NBT and block
++                    if (blockEntityNBT != null) {
++                        continue;
++                    }
++
++                    BlockState blockState = input.getBlockState(x, y, z);
++                    boolean hasWater = blockState.getFluidState().is(FluidTags.WATER) || (blockState.hasProperty(BlockStateProperties.WATERLOGGED) && blockState.getValue(BlockStateProperties.WATERLOGGED));
++                    cn.nukkit.block.BlockState bedrockBlock = MappingRegistries.PNX_BLOCKS.getBedrockBlock(blockState);
++                    output.setBlockState(x, y, z, bedrockBlock);
++                    if (hasWater) {
++                        output.setBlockState(x, y, z, WATER, 1);
++                    }
++                }
++
++                int height = input.getHeight(Heightmap.Types.WORLD_SURFACE, x, z);
++                output.setHeightMap(x, z, height);
++            }
++        }
++    }
++}
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index 2fa5507aa2153a05208077f9547c165a1099b5bb..2846f9eb009b5435062aa5da0105c2f2f1ded4b3 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -1159,7 +1159,8 @@ public final class CraftServer implements Server {
+ 
+     @SuppressWarnings({ "unchecked", "finally" })
+     private void loadCustomPermissions() {
+-        File file = new File(this.configuration.getString("settings.permissions-file"));
++        //File file = new File(this.configuration.getString("settings.permissions-file"));
++        File file = new File(org.bukkit.craftbukkit.Main.getWorkPath(),this.configuration.getString("settings.permissions-file"));// AllayMC start - rename to workpath
+         FileInputStream stream;
+ 
+         try {
+diff --git a/src/main/java/org/bukkit/craftbukkit/Main.java b/src/main/java/org/bukkit/craftbukkit/Main.java
+index e02102280ed1dc300191d19bbca8f00e17701753..59ad9f14b07e46694ac41245cd1af9d62720ca06 100644
+--- a/src/main/java/org/bukkit/craftbukkit/Main.java
++++ b/src/main/java/org/bukkit/craftbukkit/Main.java
+@@ -15,6 +15,7 @@ import joptsimple.OptionSet;
+ import joptsimple.util.PathConverter;
+ 
+ public class Main {
++    private static String workPath;// AllayMC
+     public static final java.time.Instant BOOT_TIME = java.time.Instant.now(); // Paper - track initial start time
+     public static boolean useJline = true;
+     public static boolean useConsole = true;
+@@ -26,6 +27,16 @@ public class Main {
+     // Paper end - Reset loggers after shutdown
+ 
+     public static void main(String[] args) {
++        // AllayMC start - custom app arguments
++        if (Boolean.getBoolean("Paper.isRunDev")) {
++            args = new String[3];
++            args[0] = "jegenerator";
++            args[1] = "--universe=jegenerator";
++            args[2] = "--nogui";
++        }
++        workPath = args[0];
++        // AllayMC end
++        
+         // Paper start
+         final String warnWhenLegacyFormattingDetected = String.join(".", "net", "kyori", "adventure", "text", "warnWhenLegacyFormattingDetected");
+         if (false && System.getProperty(warnWhenLegacyFormattingDetected) == null) {
+@@ -41,13 +52,13 @@ public class Main {
+                 this.acceptsAll(Main.asList("c", "config"), "Properties file to use")
+                         .withRequiredArg()
+                         .ofType(File.class)
+-                        .defaultsTo(new File("server.properties"))
++                        .defaultsTo(new File(workPath,"server.properties"))
+                         .describedAs("Properties file");
+ 
+                 this.acceptsAll(Main.asList("P", "plugins"), "Plugin directory to use")
+                         .withRequiredArg()
+                         .ofType(File.class)
+-                        .defaultsTo(new File("plugins"))
++                        .defaultsTo(new File(workPath,"plugins"))
+                         .describedAs("Plugin directory");
+ 
+                 this.acceptsAll(Main.asList("h", "host", "server-ip"), "Host to listen on")
+@@ -58,7 +69,7 @@ public class Main {
+                 this.acceptsAll(Main.asList("W", "world-dir", "universe", "world-container"), "World container")
+                         .withRequiredArg()
+                         .ofType(File.class)
+-                        .defaultsTo(new File("."))
++                        .defaultsTo(new File(workPath))
+                         .describedAs("Directory containing worlds");
+ 
+                 this.acceptsAll(Main.asList("w", "world", "level-name"), "World name")
+@@ -124,13 +135,13 @@ public class Main {
+                 this.acceptsAll(Main.asList("b", "bukkit-settings"), "File for bukkit settings")
+                         .withRequiredArg()
+                         .ofType(File.class)
+-                        .defaultsTo(new File("bukkit.yml"))
++                        .defaultsTo(new File(workPath,"bukkit.yml"))
+                         .describedAs("Yml file");
+ 
+                 this.acceptsAll(Main.asList("C", "commands-settings"), "File for command settings")
+                         .withRequiredArg()
+                         .ofType(File.class)
+-                        .defaultsTo(new File("commands.yml"))
++                        .defaultsTo(new File(workPath,"commands.yml"))
+                         .describedAs("Yml file");
+ 
+                 this.acceptsAll(Main.asList("forceUpgrade"), "Whether to force a world upgrade");
+@@ -153,7 +164,7 @@ public class Main {
+                 this.acceptsAll(Main.asList("S", "spigot-settings"), "File for spigot settings")
+                         .withRequiredArg()
+                         .ofType(File.class)
+-                        .defaultsTo(new File("spigot.yml"))
++                        .defaultsTo(new File(workPath,"spigot.yml"))
+                         .describedAs("Yml file");
+                 // Spigot End
+ 
+@@ -161,12 +172,12 @@ public class Main {
+                 acceptsAll(asList("paper-dir", "paper-settings-directory"), "Directory for Paper settings")
+                     .withRequiredArg()
+                     .ofType(File.class)
+-                    .defaultsTo(new File(io.papermc.paper.configuration.PaperConfigurations.CONFIG_DIR))
++                    .defaultsTo(new File(workPath,io.papermc.paper.configuration.PaperConfigurations.CONFIG_DIR))
+                     .describedAs("Config directory");
+                 acceptsAll(asList("paper", "paper-settings"), "File for Paper settings")
+                         .withRequiredArg()
+                         .ofType(File.class)
+-                        .defaultsTo(new File("paper.yml"))
++                        .defaultsTo(new File(workPath,"paper.yml"))
+                         .describedAs("Yml file");
+ 
+                 acceptsAll(asList("add-plugin", "add-extra-plugin-jar"), "Specify paths to extra plugin jars to be loaded in addition to those in the plugins folder. This argument can be specified multiple times, once for each extra plugin jar path.")
+@@ -234,7 +245,7 @@ public class Main {
+             System.out.println(CraftServer.class.getPackage().getImplementationVersion());
+         } else {
+             // Do you love Java using + and ! as string based identifiers? I sure do!
+-            String path = new File(".").getAbsolutePath();
++            String path = new File(workPath).getAbsolutePath();
+             if (path.contains("!") || path.contains("+")) {
+                 System.err.println("Cannot run server in a directory with ! or + in the pathname. Please rename the affected folders and try again.");
+                 return;
+@@ -392,4 +403,10 @@ public class Main {
+     private static List<String> asList(String... params) {
+         return Arrays.asList(params);
+     }
++
++    // AllayMC start - add work path
++    public static String getWorkPath() {
++        return workPath;
++    }
++    // AllayMC end
+ }
+diff --git a/src/main/java/org/bukkit/craftbukkit/help/HelpYamlReader.java b/src/main/java/org/bukkit/craftbukkit/help/HelpYamlReader.java
+index 5923d3c17756c489fcb392044c0679fe52e2d58f..ef673fc05a03b20e432a814651824ffde025b1d0 100644
+--- a/src/main/java/org/bukkit/craftbukkit/help/HelpYamlReader.java
++++ b/src/main/java/org/bukkit/craftbukkit/help/HelpYamlReader.java
+@@ -25,7 +25,8 @@ public class HelpYamlReader {
+     public HelpYamlReader(Server server) {
+         this.server = server;
+ 
+-        File helpYamlFile = new File("help.yml");
++        //File helpYamlFile = new File("help.yml");
++        File helpYamlFile = new File(org.bukkit.craftbukkit.Main.getWorkPath(),"help.yml");// AllayMC - rename to workpath
+         YamlConfiguration defaultConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("configurations/help.yml"), Charsets.UTF_8));
+ 
+         try {
+diff --git a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
+index e85b9bb3f9c225d289a4959921970b9963881199..3df51838d217dc4df45752c275d475c161c9bb0d 100644
+--- a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
++++ b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
+@@ -532,14 +532,15 @@ public class CraftScheduler implements BukkitScheduler {
+     }
+ 
+     protected CraftTask handle(final CraftTask task, final long delay) { // Paper
+-        // Paper start
++        /*// Paper start
+         if (!this.isAsyncScheduler && !task.isSync()) {
+             this.asyncScheduler.handle(task, delay);
+             return task;
+         }
+         // Paper end
+         task.setNextRun(this.currentTick + delay);
+-        this.addTask(task);
++        this.addTask(task);*/
++        //AllayMC - cancel handle task
+         return task;
+     }
+ 
+diff --git a/src/main/java/org/spigotmc/SpigotConfig.java b/src/main/java/org/spigotmc/SpigotConfig.java
+index 6c2a3813e7d63d57f07a8fa2edbb9d231221d818..10980f810debc7cc24e465fbe1fb0aebc7376ba4 100644
+--- a/src/main/java/org/spigotmc/SpigotConfig.java
++++ b/src/main/java/org/spigotmc/SpigotConfig.java
+@@ -253,7 +253,8 @@ public class SpigotConfig
+     public static Map<ResourceLocation, Integer> forcedStats = new HashMap<>();
+     private static void stats()
+     {
+-        SpigotConfig.disableStatSaving = SpigotConfig.getBoolean( "stats.disable-saving", false );
++        //SpigotConfig.disableStatSaving = SpigotConfig.getBoolean( "stats.disable-saving", false );
++        SpigotConfig.disableStatSaving = SpigotConfig.getBoolean( "stats.disable-saving", true );// AllayMC - default dont save data
+ 
+         if ( !SpigotConfig.config.contains( "stats.forced-stats" ) ) {
+             SpigotConfig.config.createSection( "stats.forced-stats" );
+@@ -389,7 +390,8 @@ public class SpigotConfig
+     public static boolean disableAdvancementSaving;
+     public static List<String> disabledAdvancements;
+     private static void disabledAdvancements() {
+-        SpigotConfig.disableAdvancementSaving = SpigotConfig.getBoolean("advancements.disable-saving", false);
++        //SpigotConfig.disableAdvancementSaving = SpigotConfig.getBoolean("advancements.disable-saving", false);
++        SpigotConfig.disableAdvancementSaving = SpigotConfig.getBoolean("advancements.disable-saving", true);// AllayMC - default dont save data
+         SpigotConfig.disabledAdvancements = SpigotConfig.getList("advancements.disabled", Arrays.asList(new String[]{"minecraft:story/disabled"}));
+     }
+ 
+@@ -402,7 +404,8 @@ public class SpigotConfig
+ 
+     public static boolean disablePlayerDataSaving;
+     private static void disablePlayerDataSaving() {
+-        SpigotConfig.disablePlayerDataSaving = SpigotConfig.getBoolean("players.disable-saving", false);
++        //SpigotConfig.disablePlayerDataSaving = SpigotConfig.getBoolean("players.disable-saving", false);
++        SpigotConfig.disablePlayerDataSaving = SpigotConfig.getBoolean("players.disable-saving", true);// AllayMC - default dont save data
+     }
+ 
+     public static boolean belowZeroGenerationInExistingChunks;
