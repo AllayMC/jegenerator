@@ -1,0 +1,128 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: CoolLoong <1542536763@qq.com>
+Date: Thu, 30 May 2024 23:40:25 +0800
+Subject: [PATCH] fix: pnx chunk gen
+
+
+diff --git a/build.gradle.kts b/build.gradle.kts
+index a42072b098cbdc9b32003fbe64e8afff7550fa9c..98a17b59857fb75d975f89acb5c028b3d63796ba 100644
+--- a/build.gradle.kts
++++ b/build.gradle.kts
+@@ -18,7 +18,7 @@ dependencies {
+         exclude(group = "org.cloudburstmc", module = "nbt") // use allay nbt
+     }
+     compileOnly(files("C:\\Users\\15425\\IdeaProjects\\Allay\\Allay-API\\build\\libs\\Allay-API-1.0.0-all.jar"))
+-    compileOnly("com.github.powernukkitx:powernukkitx:nightly-build")
++    compileOnly("com.github.PowerNukkitX:PowerNukkitX:cbafb2a294")
+     compileOnly("org.projectlombok:lombok:1.18.30")
+     annotationProcessor("org.projectlombok:lombok:1.18.30")// AllayMC
+     implementation("org.allaymc:NBT:3.0.9")
+diff --git a/src/main/java/org/allaymc/jegenerator/PNXVanillaGenerator.java b/src/main/java/org/allaymc/jegenerator/PNXVanillaGenerator.java
+index 947bb76f72ada1f6f63de182d93951b24c5c4a19..6364f00e7ff86e671189e0aea06e88ede4199f9d 100644
+--- a/src/main/java/org/allaymc/jegenerator/PNXVanillaGenerator.java
++++ b/src/main/java/org/allaymc/jegenerator/PNXVanillaGenerator.java
+@@ -57,17 +57,19 @@ public class PNXVanillaGenerator extends Generator {
+         @Override
+         public void apply(cn.nukkit.level.generator.ChunkGenerateContext context) {
+             final IChunk chunk = context.getChunk();
+-            ChunkAccess jeChunk = jeLevel.getChunkSource().getChunkAtIfLoadedImmediately(chunk.getX(), chunk.getZ());
+-            if (jeChunk == null) {
+-                jeChunk = CompletableFuture.supplyAsync(() -> jeLevel.getChunkSource().getChunk(chunk.getX(), chunk.getZ(), ChunkStatus.FULL, true), jeLevel.getChunkSource().mainThreadProcessor).join();
+-            }
+-            PNXChunkUtils.convertChunk(jeChunk, chunk);
+-            if (Server.getInstance().getConfig("chunk-ticking.light-updates", true)) {
+-                chunk.recalculateHeightMap();
+-                chunk.populateSkyLight();
+-                chunk.setLightPopulated();
+-            }
+-            chunk.setChunkState(ChunkState.FINISHED);
++            chunk.batchProcess(unsafeChunk -> {
++                ChunkAccess jeChunk = jeLevel.getChunkSource().getChunkAtIfLoadedImmediately(unsafeChunk.getX(), unsafeChunk.getZ());
++                if (jeChunk == null) {
++                    jeChunk = CompletableFuture.supplyAsync(() -> jeLevel.getChunkSource().getChunk(unsafeChunk.getX(), unsafeChunk.getZ(), ChunkStatus.FULL, true), jeLevel.getChunkSource().mainThreadProcessor).join();
++                }
++                PNXChunkUtils.convertChunk(jeChunk, unsafeChunk);
++                if (Server.getInstance().getSettings().chunkSettings().lightUpdates()) {
++                    unsafeChunk.recalculateHeightMap();
++                    unsafeChunk.populateSkyLight();
++                    unsafeChunk.setLightPopulated();
++                }
++                unsafeChunk.setChunkState(ChunkState.FINISHED);
++            });
+         }
+ 
+         @Override
+diff --git a/src/main/java/org/allaymc/jegenerator/utils/PNXChunkUtils.java b/src/main/java/org/allaymc/jegenerator/utils/PNXChunkUtils.java
+index f2acb4f23f3282066cdda4e617e23ce90ea51ac8..78dc41031c82c313784eb7c018d69aa5563a3db5 100644
+--- a/src/main/java/org/allaymc/jegenerator/utils/PNXChunkUtils.java
++++ b/src/main/java/org/allaymc/jegenerator/utils/PNXChunkUtils.java
+@@ -1,12 +1,10 @@
+ package org.allaymc.jegenerator.utils;
+ 
+-import cn.nukkit.level.format.IChunk;
++import cn.nukkit.level.format.UnsafeChunk;
+ import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
+-import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Holder;
+ import net.minecraft.core.Registry;
+ import net.minecraft.core.registries.Registries;
+-import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.server.MinecraftServer;
+ import net.minecraft.tags.FluidTags;
+ import net.minecraft.world.level.biome.Biome;
+@@ -21,7 +19,7 @@ public class PNXChunkUtils {
+     private static final Registry<Biome> BIOME_REGISTRY = MinecraftServer.getServer().registryAccess().registryOrThrow(Registries.BIOME);
+     private static final Int2IntArrayMap BIOME_MAPPINGS = MappingRegistries.BIOME.get();
+ 
+-    public static void convertChunk(final ChunkAccess input, final IChunk output) {
++    public static void convertChunk(final ChunkAccess input, final UnsafeChunk output) {
+         if (input == null) {
+             System.out.println(output.getX() + ":" + output.getZ() + " convert is null!");
+             return;
+@@ -29,9 +27,9 @@ public class PNXChunkUtils {
+         for (int x = 0; x < 16; x++) {
+             for (int z = 0; z < 16; z++) {
+                 for (int y = input.getMinBuildHeight(); y < input.getMaxBuildHeight(); y++) {
+-                    Holder<Biome> noiseBiome = input.getNoiseBiome(x >> 2, y >> 2, z >> 2);
+-                    int id = BIOME_REGISTRY.getId(noiseBiome.value());
+-                    int biome = BIOME_MAPPINGS.getOrDefault(id, 1);
++                    final Holder<Biome> noiseBiome = input.getNoiseBiome(x >> 2, y >> 2, z >> 2);
++                    final int id = BIOME_REGISTRY.getId(noiseBiome.value());
++                    final int biome = BIOME_MAPPINGS.getOrDefault(id, 1);
+                     output.setBiomeId(x, y, z, biome);
+ 
+                     /*CompoundTag blockEntityNBT = input.getBlockEntityNbtForSaving(new BlockPos((input.locX << 4) + x, y, (input.locZ << 4) + z));
+@@ -40,16 +38,16 @@ public class PNXChunkUtils {
+                         continue;
+                     }*/
+ 
+-                    BlockState blockState = input.getBlockState(x, y, z);
+-                    boolean hasWater = blockState.getFluidState().is(FluidTags.WATER) || (blockState.hasProperty(BlockStateProperties.WATERLOGGED) && blockState.getValue(BlockStateProperties.WATERLOGGED));
+-                    cn.nukkit.block.BlockState bedrockBlock = MappingRegistries.PNX_BLOCKS.getBedrockBlock(blockState);
+-                    output.setBlockState(x, y, z, bedrockBlock);
++                    final BlockState blockState = input.getBlockState(x, y, z);
++                    final boolean hasWater = blockState.getFluidState().is(FluidTags.WATER) || (blockState.hasProperty(BlockStateProperties.WATERLOGGED) && blockState.getValue(BlockStateProperties.WATERLOGGED));
++                    final cn.nukkit.block.BlockState bedrockBlock = MappingRegistries.PNX_BLOCKS.getBedrockBlock(blockState);
++                    output.setBlockState(x, y, z, bedrockBlock, 0);
+                     if (hasWater) {
+                         output.setBlockState(x, y, z, WATER, 1);
+                     }
+                 }
+ 
+-                int height = input.getHeight(Heightmap.Types.WORLD_SURFACE, x, z);
++                final int height = input.getHeight(Heightmap.Types.WORLD_SURFACE, x, z);
+                 output.setHeightMap(x, z, height);
+             }
+         }
+diff --git a/src/main/java/org/bukkit/craftbukkit/Main.java b/src/main/java/org/bukkit/craftbukkit/Main.java
+index 1cd4f092b8a5d1702968ebfc28632ec0b3bdece1..04b0a7ed3035e007b556f674411842082d9f9fb6 100644
+--- a/src/main/java/org/bukkit/craftbukkit/Main.java
++++ b/src/main/java/org/bukkit/craftbukkit/Main.java
+@@ -39,6 +39,7 @@ public class Main {
+             args[3] = "--nogui";
+         }
+         System.setProperty("com.mojang.eula.agree","true");
++        System.setProperty("disable.watchdog","true");
+ 
+         ArrayList<String> argsList = Lists.newArrayList(args);
+         workPath = argsList.removeFirst();
