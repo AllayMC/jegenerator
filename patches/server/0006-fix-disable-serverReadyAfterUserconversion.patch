@@ -1,0 +1,33 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: CoolLoong <1542536763@qq.com>
+Date: Thu, 30 May 2024 22:25:31 +0800
+Subject: [PATCH] fix: disable serverReadyAfterUserconversion
+
+
+diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
+index 8e0697f296cb8b5ae1412c126520037cafee5088..b8bce870123239bd407e3c8e4addd0da071dee6c 100644
+--- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
++++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
+@@ -311,10 +311,10 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+             DedicatedServer.LOGGER.warn("To change this, set \"online-mode\" to \"true\" in the server.properties file.");
+         }
+ 
+-
+-        if (!OldUsersConverter.serverReadyAfterUserconversion(this)) {
++        //AllayMC - disable serverReadyAfterUserconversion
++        /*if (!OldUsersConverter.serverReadyAfterUserconversion(this)) {
+             return false;
+-        } else {
++        } else {*/
+             // this.setPlayerList(new DedicatedPlayerList(this, this.registries(), this.playerDataStorage)); // CraftBukkit - moved up
+             this.debugSampleSubscriptionTracker = new DebugSampleSubscriptionTracker(this.getPlayerList());
+             this.tickTimeLogger = new RemoteSampleLogger(TpsDebugDimensions.values().length, this.debugSampleSubscriptionTracker, RemoteDebugSampleType.TICK_TIME);
+@@ -357,7 +357,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+             }
+ 
+             return true;
+-        }
++        //}
+     }
+ 
+     // Paper start
