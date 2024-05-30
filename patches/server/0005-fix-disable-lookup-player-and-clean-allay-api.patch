@@ -1,0 +1,292 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: CoolLoong <1542536763@qq.com>
+Date: Thu, 30 May 2024 22:15:08 +0800
+Subject: [PATCH] fix: disable lookup player and clean allay api
+
+
+diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
+index b2aab2b64a9259965cd23c51c1306f1ef3e194a4..8e0697f296cb8b5ae1412c126520037cafee5088 100644
+--- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
++++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
+@@ -223,9 +223,9 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+         this.paperConfigurations.initializeWorldDefaultsConfiguration(this.registryAccess());
+         // Paper end - initialize global and world-defaults configuration
+         // Paper start - fix converting txt to json file; convert old users earlier after PlayerList creation but before file load/save
+-        if (this.convertOldUsers()) {
++        /*if (this.convertOldUsers()) {
+             this.getProfileCache().save(false); // Paper
+-        }
++        }*/ //allay - disable converter
+         this.getPlayerList().loadAndSaveFiles(); // Must be after convertNames
+         // Paper end - fix converting txt to json file
+         org.spigotmc.WatchdogThread.doStart(org.spigotmc.SpigotConfig.timeoutTime, org.spigotmc.SpigotConfig.restartOnCrash); // Paper - start watchdog thread
+diff --git a/src/main/java/org/allaymc/jegenerator/AllayVanillaGenerator.java b/src/main/java/org/allaymc/jegenerator/AllayVanillaGenerator.java
+index 091fe24e2e910aaecf9519a9e1eec81cdad5472f..80e203c20b96c0bd2a5bdb613ca2b531b682c438 100644
+--- a/src/main/java/org/allaymc/jegenerator/AllayVanillaGenerator.java
++++ b/src/main/java/org/allaymc/jegenerator/AllayVanillaGenerator.java
+@@ -7,7 +7,6 @@ import org.allaymc.api.world.generator.ChunkGenerateContext;
+ import org.allaymc.api.world.generator.WorldGenerator;
+ import org.allaymc.api.world.generator.WorldGeneratorType;
+ import org.allaymc.jegenerator.utils.AllayChunkUtils;
+-import net.minecraft.core.registries.Registries;
+ import net.minecraft.resources.ResourceKey;
+ import net.minecraft.server.MinecraftServer;
+ import net.minecraft.server.level.ServerLevel;
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/AbstractMappedRegistry.java b/src/main/java/org/allaymc/jegenerator/mappings/AbstractMappedRegistry.java
+index edf48887b3bddf3f09db6b050339181e5c2aec13..a9e78bd0ad055dc595e6c653c9b35b75bc8603fa 100644
+--- a/src/main/java/org/allaymc/jegenerator/mappings/AbstractMappedRegistry.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/AbstractMappedRegistry.java
+@@ -1,7 +1,7 @@
+ package org.allaymc.jegenerator.mappings;
+ 
+ 
+-import org.allaymc.api.registry.RegistryLoader;
++import org.allaymc.jegenerator.mappings.loader.RegistryLoader;
+ 
+ import javax.annotation.Nullable;
+ import java.util.Map;
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/ArrayMappingRegistry.java b/src/main/java/org/allaymc/jegenerator/mappings/ArrayMappingRegistry.java
+index dd29ef3b4b21febce2b288a8f2a4f140d17d5f67..5e0c533249334e20243f64bf325ae8621af369df 100644
+--- a/src/main/java/org/allaymc/jegenerator/mappings/ArrayMappingRegistry.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/ArrayMappingRegistry.java
+@@ -1,6 +1,6 @@
+ package org.allaymc.jegenerator.mappings;
+ 
+-import org.allaymc.api.registry.RegistryLoader;
++import org.allaymc.jegenerator.mappings.loader.RegistryLoader;
+ 
+ import javax.annotation.Nullable;
+ import java.util.function.Supplier;
+@@ -13,14 +13,6 @@ import java.util.function.Supplier;
+  */
+ public class ArrayMappingRegistry<M> extends MappingRegistry<M[]> {
+ 
+-    /**
+-     * Creates a new array registry of this class with the given input and
+-     * {@link RegistryLoader}. The input specified is what the registry
+-     * loader needs to take in.
+-     *
+-     * @param input the input
+-     * @param registryLoader the registry loader
+-     */
+     protected <I> ArrayMappingRegistry(I input, RegistryLoader<I, M[]> registryLoader) {
+         super(input, registryLoader);
+     }
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/MappedMappingRegistry.java b/src/main/java/org/allaymc/jegenerator/mappings/MappedMappingRegistry.java
+index 4cb13c0d38af959ffc4032a6053850c0b466a5aa..0a0673df01593eb397a63ef34f6c240f1ea861b7 100644
+--- a/src/main/java/org/allaymc/jegenerator/mappings/MappedMappingRegistry.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/MappedMappingRegistry.java
+@@ -1,6 +1,6 @@
+ package org.allaymc.jegenerator.mappings;
+ 
+-import org.allaymc.api.registry.RegistryLoader;
++import org.allaymc.jegenerator.mappings.loader.RegistryLoader;
+ 
+ import java.util.Map;
+ import java.util.function.Supplier;
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/MappingRegistry.java b/src/main/java/org/allaymc/jegenerator/mappings/MappingRegistry.java
+index 1a8414167d4268d0ad0da96523a80ad07ab12f13..2f9810a4661caf4409a38ca9d0fb1e9f5512e3a6 100644
+--- a/src/main/java/org/allaymc/jegenerator/mappings/MappingRegistry.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/MappingRegistry.java
+@@ -1,44 +1,10 @@
+ package org.allaymc.jegenerator.mappings;
+ 
+ 
+-import org.allaymc.api.registry.RegistryLoader;
++import org.allaymc.jegenerator.mappings.loader.RegistryLoader;
+ 
+ import java.util.function.Consumer;
+ 
+-/**
+- * A wrapper around a value which is loaded based on the output from the provided
+- * {@link RegistryLoader}. This class is primarily designed to hold a registration
+- * of some kind, however no limits are set on what it can hold, as long as the
+- * specified RegistryLoader returns the same value type that is specified in the
+- * generic.
+- *
+- * <p>
+- * Below, a RegistryLoader is taken in the constructor. RegistryLoaders have two
+- * generic types: the input, and the output. The input is what it takes in, whether
+- * it be a string which references to a file, or nothing more than an integer. The
+- * output is what it generates based on the input, and should be the same type as
+- * the {@link M} generic specified in the registry.
+- *
+- * <p>
+- * Registries can be very simple to create. Here is an example that simply parses a
+- * number given a string:
+- *
+- * <pre>
+- * {@code
+- *     public static final SimpleRegistry<Integer> STRING_TO_INT = SimpleRegistry.create("5", Integer::parseInt);
+- * }
+- * </pre>
+- *
+- * <p>
+- * This is a simple example which really wouldn't have much of a practical use,
+- * however it demonstrates a fairly basic use case of how this system works. Typically
+- * though, the first parameter would be a location of some sort, such as a file path
+- * where the loader will load the mappings from. The NBT registry is a good reference
+- * point for something both simple and practical. See {@link MappingRegistries#BIOMES_NBT} and
+- * {@link org.geysermc.geyser.registry.loader.NbtRegistryLoader}.
+- *
+- * @param <M> the value being held by the registry
+- */
+ public abstract class MappingRegistry<M> implements IRegistry<M> {
+     protected M mappings;
+ 
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/SimpleMappedRegistry.java b/src/main/java/org/allaymc/jegenerator/mappings/SimpleMappedRegistry.java
+index d1e4e4b5fd9779a601cf003ec9d7fe661e0778a5..f9638de400be7a2c469816205ed85df7a7ac833a 100644
+--- a/src/main/java/org/allaymc/jegenerator/mappings/SimpleMappedRegistry.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/SimpleMappedRegistry.java
+@@ -1,7 +1,7 @@
+ package org.allaymc.jegenerator.mappings;
+ 
+ 
+-import org.allaymc.api.registry.RegistryLoader;
++import org.allaymc.jegenerator.mappings.loader.RegistryLoader;
+ 
+ import java.util.Map;
+ import java.util.function.Supplier;
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/SimpleMappingRegistry.java b/src/main/java/org/allaymc/jegenerator/mappings/SimpleMappingRegistry.java
+index 566977082c1bbee69cafc2a8dca501628a5b2d4e..98e5609e0e528c3fc71c9c74162dac1888896c36 100644
+--- a/src/main/java/org/allaymc/jegenerator/mappings/SimpleMappingRegistry.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/SimpleMappingRegistry.java
+@@ -1,7 +1,7 @@
+ package org.allaymc.jegenerator.mappings;
+ 
+ 
+-import org.allaymc.api.registry.RegistryLoader;
++import org.allaymc.jegenerator.mappings.loader.RegistryLoader;
+ 
+ import java.util.function.Supplier;
+ 
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/VersionedMappingRegistry.java b/src/main/java/org/allaymc/jegenerator/mappings/VersionedMappingRegistry.java
+index 1a91daa8a5701f9bbc1d702d3cb8c8a66af52bb6..af916dae43e3e8f4edb224d2a39681a69c9f7ace 100644
+--- a/src/main/java/org/allaymc/jegenerator/mappings/VersionedMappingRegistry.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/VersionedMappingRegistry.java
+@@ -1,7 +1,7 @@
+ package org.allaymc.jegenerator.mappings;
+ 
+-import org.allaymc.api.registry.RegistryLoader;
+ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
++import org.allaymc.jegenerator.mappings.loader.RegistryLoader;
+ 
+ import java.util.Map;
+ import java.util.function.Supplier;
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/loader/NbtRegistryLoader.java b/src/main/java/org/allaymc/jegenerator/mappings/loader/NbtRegistryLoader.java
+index 64efc709c0e840c216b0f891cb442fc57d2a469e..30e2bf6d67fa7aedefebde92c76edc42f4956c88 100644
+--- a/src/main/java/org/allaymc/jegenerator/mappings/loader/NbtRegistryLoader.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/loader/NbtRegistryLoader.java
+@@ -1,6 +1,5 @@
+ package org.allaymc.jegenerator.mappings.loader;
+ 
+-import org.allaymc.api.registry.RegistryLoader;
+ import net.minecraft.server.Main;
+ import org.cloudburstmc.nbt.NBTInputStream;
+ import org.cloudburstmc.nbt.NbtMap;
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/loader/RegistryLoader.java b/src/main/java/org/allaymc/jegenerator/mappings/loader/RegistryLoader.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..089b07206d11a5706246a0cf51dc7ee50a209331
+--- /dev/null
++++ b/src/main/java/org/allaymc/jegenerator/mappings/loader/RegistryLoader.java
+@@ -0,0 +1,26 @@
++package org.allaymc.jegenerator.mappings.loader;
++
++/**
++ * Represents a registry loader. {@link I} is the input value, which can be anything,
++ * but is commonly a file path or something similar. {@link O} represents the output
++ * type returned by this, which can also be anything.
++ * <p>
++ * Allay Project 2023/3/18
++ *
++ * @param <I> the input to load the registry from
++ * @param <O> the output of the registry
++ *
++ * @author GeyserMC | daoge_cmd
++ */
++@FunctionalInterface
++public interface RegistryLoader<I, O> {
++
++    /**
++     * Loads an output from the given input.
++     *
++     * @param input the input
++     *
++     * @return the output
++     */
++    O load(I input);
++}
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/loader/RegistryLoaders.java b/src/main/java/org/allaymc/jegenerator/mappings/loader/RegistryLoaders.java
+index 68b10efea529903dd99f3dcea95465a3417847f2..9e04576f6a8050ccd32a7df18919011dfbffa95d 100644
+--- a/src/main/java/org/allaymc/jegenerator/mappings/loader/RegistryLoaders.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/loader/RegistryLoaders.java
+@@ -1,6 +1,5 @@
+ package org.allaymc.jegenerator.mappings.loader;
+ 
+-import org.allaymc.api.registry.RegistryLoader;
+ import org.jetbrains.annotations.NotNull;
+ 
+ import java.util.function.Supplier;
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/populator/BiomeRegistryLoader.java b/src/main/java/org/allaymc/jegenerator/mappings/populator/BiomeRegistryLoader.java
+index ae2e0353e6052c065b23793de5b5f501d095e90a..a28a37674a04a7c3fe0b07792ccd88fb81d921cb 100644
+--- a/src/main/java/org/allaymc/jegenerator/mappings/populator/BiomeRegistryLoader.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/populator/BiomeRegistryLoader.java
+@@ -28,13 +28,13 @@ package org.allaymc.jegenerator.mappings.populator;
+ import net.minecraft.core.Registry;
+ import net.minecraft.server.*;
+ import net.minecraft.world.level.biome.Biome;
+-import org.allaymc.api.registry.RegistryLoader;
+ import org.allaymc.jegenerator.mappings.MappingRegistries;
+ import com.fasterxml.jackson.annotation.JsonProperty;
+ import com.fasterxml.jackson.core.type.TypeReference;
+ import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
+ import net.minecraft.core.registries.Registries;
+ import net.minecraft.resources.ResourceLocation;
++import org.allaymc.jegenerator.mappings.loader.RegistryLoader;
+ 
+ import java.io.IOException;
+ import java.io.InputStream;
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/populator/BlockRegistryPopulator.java b/src/main/java/org/allaymc/jegenerator/mappings/populator/BlockRegistryPopulator.java
+index e5eb15df37b8aeb9ac60712830d18d267a50d991..0c8dc61b5d0e2b519b1675bd44a393738743b00f 100644
+--- a/src/main/java/org/allaymc/jegenerator/mappings/populator/BlockRegistryPopulator.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/populator/BlockRegistryPopulator.java
+@@ -3,10 +3,8 @@ package org.allaymc.jegenerator.mappings.populator;
+ import cn.nukkit.block.BlockAir;
+ import cn.nukkit.block.BlockFlowingWater;
+ import cn.nukkit.registry.Registries;
+-import org.allaymc.api.block.interfaces.BlockAirBehavior;
+ import org.allaymc.api.block.palette.BlockStateHashPalette;
+ import org.allaymc.api.block.type.BlockTypes;
+-import org.allaymc.api.data.VanillaBlockPropertyTypes;
+ import org.allaymc.jegenerator.mappings.MappingRegistries;
+ import org.allaymc.jegenerator.mappings.type.BedrockBlockDefinition;
+ import org.allaymc.jegenerator.mappings.type.AllayBlockMappings;
+diff --git a/src/main/java/org/allaymc/jegenerator/utils/AllayChunkUtils.java b/src/main/java/org/allaymc/jegenerator/utils/AllayChunkUtils.java
+index b920815c14228a4cc8d56dedb6b448ebaab0be74..598721b58814f4d5d6e4435a390eeb188f0c62d6 100644
+--- a/src/main/java/org/allaymc/jegenerator/utils/AllayChunkUtils.java
++++ b/src/main/java/org/allaymc/jegenerator/utils/AllayChunkUtils.java
+@@ -4,11 +4,9 @@ import org.allaymc.api.data.VanillaBiomeId;
+ import org.allaymc.api.world.chunk.UnsafeChunk;
+ import org.allaymc.jegenerator.mappings.MappingRegistries;
+ import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
+-import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Holder;
+ import net.minecraft.core.Registry;
+ import net.minecraft.core.registries.Registries;
+-import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.server.MinecraftServer;
+ import net.minecraft.tags.FluidTags;
+ import net.minecraft.world.level.biome.Biome;
+diff --git a/src/main/java/org/allaymc/jegenerator/utils/PNXChunkUtils.java b/src/main/java/org/allaymc/jegenerator/utils/PNXChunkUtils.java
+index fd218739c4c448bc6551a3e345463ee03c75447f..f2acb4f23f3282066cdda4e617e23ce90ea51ac8 100644
+--- a/src/main/java/org/allaymc/jegenerator/utils/PNXChunkUtils.java
++++ b/src/main/java/org/allaymc/jegenerator/utils/PNXChunkUtils.java
+@@ -14,8 +14,6 @@ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.chunk.ChunkAccess;
+ import net.minecraft.world.level.levelgen.Heightmap;
+-import org.allaymc.api.data.VanillaBiomeId;
+-import org.allaymc.api.world.chunk.UnsafeChunk;
+ import org.allaymc.jegenerator.mappings.MappingRegistries;
+ 
+ public class PNXChunkUtils {
