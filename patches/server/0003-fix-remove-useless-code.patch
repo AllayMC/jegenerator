@@ -1,0 +1,35 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: CoolLoong <1542536763@qq.com>
+Date: Thu, 30 May 2024 20:35:55 +0800
+Subject: [PATCH] fix: remove useless code
+
+
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/populator/BlockRegistryPopulator.java b/src/main/java/org/allaymc/jegenerator/mappings/populator/BlockRegistryPopulator.java
+index 1700135dff8535ac26edb3960606e2f8d84bb217..e5eb15df37b8aeb9ac60712830d18d267a50d991 100644
+--- a/src/main/java/org/allaymc/jegenerator/mappings/populator/BlockRegistryPopulator.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/populator/BlockRegistryPopulator.java
+@@ -133,8 +133,9 @@ public final class BlockRegistryPopulator {
+                 blocks[javaRuntimeId] = Registries.BLOCKSTATE.get(vanillaBedrockDefinition.getRuntimeId());
+                 switch (javaId) {
+                     case "minecraft:air" -> airDefinition = BlockAir.PROPERTIES.getDefaultState();
+-                    case "minecraft:water[level=15]" ->
++                    case "minecraft:water[level=15]" -> {
+                         flowWaterDefinition = BlockFlowingWater.PROPERTIES.getDefaultState();
++                    }
+                 }
+             } else {
+                 blocks[javaRuntimeId] = null;
+diff --git a/src/main/java/org/allaymc/jegenerator/utils/AllayChunkUtils.java b/src/main/java/org/allaymc/jegenerator/utils/AllayChunkUtils.java
+index d28a2ddf0c2e7b3dfe6f1b7455749b8f352f90b5..b920815c14228a4cc8d56dedb6b448ebaab0be74 100644
+--- a/src/main/java/org/allaymc/jegenerator/utils/AllayChunkUtils.java
++++ b/src/main/java/org/allaymc/jegenerator/utils/AllayChunkUtils.java
+@@ -44,9 +44,6 @@ public class AllayChunkUtils {
+                     BlockState blockState = input.getBlockState(x, y, z);
+                     boolean hasWater = blockState.getFluidState().is(FluidTags.WATER) || (blockState.hasProperty(BlockStateProperties.WATERLOGGED) && blockState.getValue(BlockStateProperties.WATERLOGGED));
+                     org.allaymc.api.block.type.BlockState bedrockBlock = MappingRegistries.ALLAY_BLOCKS.getBedrockBlock(blockState);
+-                    if(bedrockBlock==null){
+-                        System.out.println(blockState + "convert is null");
+-                    }
+                     output.setBlockState(x, y, z, bedrockBlock);
+                     if (hasWater) {
+                         output.setBlockState(x, y, z, WATER, 1);
