@@ -1,0 +1,81 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: CoolLoong <1542536763@qq.com>
+Date: Thu, 30 May 2024 20:16:01 +0800
+Subject: [PATCH] feat: update PNXVanillaGenerator
+
+
+diff --git a/src/main/java/org/allaymc/jegenerator/PNXVanillaGenerator.java b/src/main/java/org/allaymc/jegenerator/PNXVanillaGenerator.java
+index fb0cce97f50f3a1f5a37fec2f4c52e0ecedefa37..947bb76f72ada1f6f63de182d93951b24c5c4a19 100644
+--- a/src/main/java/org/allaymc/jegenerator/PNXVanillaGenerator.java
++++ b/src/main/java/org/allaymc/jegenerator/PNXVanillaGenerator.java
+@@ -1,12 +1,12 @@
+ package org.allaymc.jegenerator;
+ 
+ import cn.nukkit.Server;
+-import cn.nukkit.level.DimensionEnum;
++import cn.nukkit.level.DimensionData;
+ import cn.nukkit.level.format.ChunkState;
+ import cn.nukkit.level.format.IChunk;
+ import cn.nukkit.level.generator.GenerateStage;
+ import cn.nukkit.level.generator.Generator;
+-import net.minecraft.core.registries.Registries;
++import net.minecraft.obfuscate.DontObfuscate;
+ import net.minecraft.resources.ResourceKey;
+ import net.minecraft.server.MinecraftServer;
+ import net.minecraft.server.level.ServerLevel;
+@@ -16,16 +16,17 @@ import net.minecraft.world.level.chunk.status.ChunkStatus;
+ import net.minecraft.world.level.dimension.LevelStem;
+ import org.allaymc.jegenerator.utils.PNXChunkUtils;
+ 
+-import java.util.HashMap;
++import java.util.Map;
+ import java.util.concurrent.CompletableFuture;
+ 
++@DontObfuscate
+ public class PNXVanillaGenerator extends Generator {
+     final ServerLevel jeLevel;
+     final ResourceKey<LevelStem> dim;
+ 
+-    public PNXVanillaGenerator(int dimId) {
+-        super(DimensionEnum.getDataFromId(dimId), new HashMap<>());
+-        switch (dimId) {
++    public PNXVanillaGenerator(DimensionData dimensionData, Map<String, Object> options) {
++        super(dimensionData, options);
++        switch (dimensionData.getDimensionId()) {
+             case 1 -> {
+                 dim = LevelStem.NETHER;
+                 jeLevel = MinecraftServer.getServer().getLevel(Level.NETHER);
+@@ -41,6 +42,7 @@ public class PNXVanillaGenerator extends Generator {
+         }
+     }
+ 
++
+     @Override
+     public void stages(GenerateStage.Builder builder) {
+         builder.start(new VanillaStage());
+diff --git a/src/main/java/org/allaymc/jegenerator/PNXVanillaGeneratorExtension.java b/src/main/java/org/allaymc/jegenerator/PNXVanillaGeneratorExtension.java
+index 6c816aae35d971adcc84bc4ff6f460d6656ea75a..710b6f84f5020ce80effbfe5ae2ad1ab09f612dc 100644
+--- a/src/main/java/org/allaymc/jegenerator/PNXVanillaGeneratorExtension.java
++++ b/src/main/java/org/allaymc/jegenerator/PNXVanillaGeneratorExtension.java
+@@ -1,6 +1,5 @@
+ package org.allaymc.jegenerator;
+ 
+-import cn.nukkit.level.generator.Generator;
+ import net.minecraft.obfuscate.DontObfuscate;
+ 
+ @DontObfuscate
+@@ -12,14 +11,4 @@ public final class PNXVanillaGeneratorExtension {
+             throw new RuntimeException(e);
+         }
+     }
+-
+-    public static Generator overworld() {
+-        return new PNXVanillaGenerator(0);
+-    }
+-    public static Generator nether() {
+-        return new PNXVanillaGenerator(1);
+-    }
+-    public static Generator end() {
+-        return new PNXVanillaGenerator(2);
+-    }
+ }
