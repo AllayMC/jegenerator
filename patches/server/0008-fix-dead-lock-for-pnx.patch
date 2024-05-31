@@ -1,0 +1,61 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: CoolLoong <1542536763@qq.com>
+Date: Sat, 1 Jun 2024 01:14:31 +0800
+Subject: [PATCH] fix dead lock for pnx
+
+
+diff --git a/src/main/java/org/allaymc/jegenerator/PNXVanillaGenerator.java b/src/main/java/org/allaymc/jegenerator/PNXVanillaGenerator.java
+index 6364f00e7ff86e671189e0aea06e88ede4199f9d..57850bb313b2537a90a69c30461a05f135db47ab 100644
+--- a/src/main/java/org/allaymc/jegenerator/PNXVanillaGenerator.java
++++ b/src/main/java/org/allaymc/jegenerator/PNXVanillaGenerator.java
+@@ -57,19 +57,17 @@ public class PNXVanillaGenerator extends Generator {
+         @Override
+         public void apply(cn.nukkit.level.generator.ChunkGenerateContext context) {
+             final IChunk chunk = context.getChunk();
+-            chunk.batchProcess(unsafeChunk -> {
+-                ChunkAccess jeChunk = jeLevel.getChunkSource().getChunkAtIfLoadedImmediately(unsafeChunk.getX(), unsafeChunk.getZ());
+-                if (jeChunk == null) {
+-                    jeChunk = CompletableFuture.supplyAsync(() -> jeLevel.getChunkSource().getChunk(unsafeChunk.getX(), unsafeChunk.getZ(), ChunkStatus.FULL, true), jeLevel.getChunkSource().mainThreadProcessor).join();
+-                }
+-                PNXChunkUtils.convertChunk(jeChunk, unsafeChunk);
+-                if (Server.getInstance().getSettings().chunkSettings().lightUpdates()) {
+-                    unsafeChunk.recalculateHeightMap();
+-                    unsafeChunk.populateSkyLight();
+-                    unsafeChunk.setLightPopulated();
+-                }
+-                unsafeChunk.setChunkState(ChunkState.FINISHED);
+-            });
++            ChunkAccess jeChunk = jeLevel.getChunkSource().getChunkAtIfLoadedImmediately(chunk.getX(), chunk.getZ());
++            if (jeChunk == null) {
++                jeChunk = CompletableFuture.supplyAsync(() -> jeLevel.getChunkSource().getChunk(chunk.getX(), chunk.getZ(), ChunkStatus.FULL, true), jeLevel.getChunkSource().mainThreadProcessor).join();
++            }
++            PNXChunkUtils.convertChunk(jeChunk, chunk);
++            if (Server.getInstance().getSettings().chunkSettings().lightUpdates()) {
++                chunk.recalculateHeightMap();
++                chunk.populateSkyLight();
++                chunk.setLightPopulated();
++            }
++            chunk.setChunkState(ChunkState.FINISHED);
+         }
+ 
+         @Override
+diff --git a/src/main/java/org/allaymc/jegenerator/utils/PNXChunkUtils.java b/src/main/java/org/allaymc/jegenerator/utils/PNXChunkUtils.java
+index 78dc41031c82c313784eb7c018d69aa5563a3db5..f1aa0df1bf314463504d96e24fa92e6af5bb74c6 100644
+--- a/src/main/java/org/allaymc/jegenerator/utils/PNXChunkUtils.java
++++ b/src/main/java/org/allaymc/jegenerator/utils/PNXChunkUtils.java
+@@ -1,5 +1,6 @@
+ package org.allaymc.jegenerator.utils;
+ 
++import cn.nukkit.level.format.IChunk;
+ import cn.nukkit.level.format.UnsafeChunk;
+ import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
+ import net.minecraft.core.Holder;
+@@ -19,7 +20,7 @@ public class PNXChunkUtils {
+     private static final Registry<Biome> BIOME_REGISTRY = MinecraftServer.getServer().registryAccess().registryOrThrow(Registries.BIOME);
+     private static final Int2IntArrayMap BIOME_MAPPINGS = MappingRegistries.BIOME.get();
+ 
+-    public static void convertChunk(final ChunkAccess input, final UnsafeChunk output) {
++    public static void convertChunk(final ChunkAccess input, final IChunk output) {
+         if (input == null) {
+             System.out.println(output.getX() + ":" + output.getZ() + " convert is null!");
+             return;
