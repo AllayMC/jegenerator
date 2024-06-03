@@ -1,0 +1,97 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: CoolLoong <1542536763@qq.com>
+Date: Mon, 3 Jun 2024 09:11:40 +0800
+Subject: [PATCH] fix water state set
+
+
+diff --git a/src/main/java/org/allaymc/jegenerator/mappings/populator/BlockRegistryPopulator.java b/src/main/java/org/allaymc/jegenerator/mappings/populator/BlockRegistryPopulator.java
+index 0c8dc61b5d0e2b519b1675bd44a393738743b00f..1cdae3d31a2f54221f291fe5e2a896c2befadc28 100644
+--- a/src/main/java/org/allaymc/jegenerator/mappings/populator/BlockRegistryPopulator.java
++++ b/src/main/java/org/allaymc/jegenerator/mappings/populator/BlockRegistryPopulator.java
+@@ -1,7 +1,7 @@
+ package org.allaymc.jegenerator.mappings.populator;
+ 
+ import cn.nukkit.block.BlockAir;
+-import cn.nukkit.block.BlockFlowingWater;
++import cn.nukkit.block.BlockWater;
+ import cn.nukkit.registry.Registries;
+ import org.allaymc.api.block.palette.BlockStateHashPalette;
+ import org.allaymc.api.block.type.BlockTypes;
+@@ -132,7 +132,7 @@ public final class BlockRegistryPopulator {
+                 switch (javaId) {
+                     case "minecraft:air" -> airDefinition = BlockAir.PROPERTIES.getDefaultState();
+                     case "minecraft:water[level=15]" -> {
+-                        flowWaterDefinition = BlockFlowingWater.PROPERTIES.getDefaultState();
++                        flowWaterDefinition = BlockWater.PROPERTIES.getDefaultState();
+                     }
+                 }
+             } else {
+@@ -165,8 +165,9 @@ public final class BlockRegistryPopulator {
+                 blocks[javaRuntimeId] = BlockStateHashPalette.getRegistry().get(vanillaBedrockDefinition.getRuntimeId());
+                 switch (javaId) {
+                     case "minecraft:air" -> airDefinition = BlockTypes.AIR_TYPE.getDefaultState();
+-                    case "minecraft:water[level=15]" ->
+-                        flowWaterDefinition = BlockTypes.FLOWING_WATER_TYPE.getDefaultState();
++                    case "minecraft:water[level=15]" -> {
++                        flowWaterDefinition = BlockTypes.WATER_TYPE.getDefaultState();
++                    }
+                 }
+             } else {
+                 blocks[javaRuntimeId] = null;
+diff --git a/src/main/java/org/allaymc/jegenerator/utils/AllayChunkUtils.java b/src/main/java/org/allaymc/jegenerator/utils/AllayChunkUtils.java
+index 598721b58814f4d5d6e4435a390eeb188f0c62d6..dae709be2ce0e21d644ead70833303c8516e9d7e 100644
+--- a/src/main/java/org/allaymc/jegenerator/utils/AllayChunkUtils.java
++++ b/src/main/java/org/allaymc/jegenerator/utils/AllayChunkUtils.java
+@@ -1,5 +1,6 @@
+ package org.allaymc.jegenerator.utils;
+ 
++import net.minecraft.world.level.block.Blocks;
+ import org.allaymc.api.data.VanillaBiomeId;
+ import org.allaymc.api.world.chunk.UnsafeChunk;
+ import org.allaymc.jegenerator.mappings.MappingRegistries;
+@@ -8,7 +9,6 @@ import net.minecraft.core.Holder;
+ import net.minecraft.core.Registry;
+ import net.minecraft.core.registries.Registries;
+ import net.minecraft.server.MinecraftServer;
+-import net.minecraft.tags.FluidTags;
+ import net.minecraft.world.level.biome.Biome;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+@@ -40,7 +40,7 @@ public class AllayChunkUtils {
+                     }*/
+ 
+                     BlockState blockState = input.getBlockState(x, y, z);
+-                    boolean hasWater = blockState.getFluidState().is(FluidTags.WATER) || (blockState.hasProperty(BlockStateProperties.WATERLOGGED) && blockState.getValue(BlockStateProperties.WATERLOGGED));
++                    boolean hasWater = !blockState.is(Blocks.WATER) && (blockState.hasProperty(BlockStateProperties.WATERLOGGED) && blockState.getValue(BlockStateProperties.WATERLOGGED));
+                     org.allaymc.api.block.type.BlockState bedrockBlock = MappingRegistries.ALLAY_BLOCKS.getBedrockBlock(blockState);
+                     output.setBlockState(x, y, z, bedrockBlock);
+                     if (hasWater) {
+diff --git a/src/main/java/org/allaymc/jegenerator/utils/PNXChunkUtils.java b/src/main/java/org/allaymc/jegenerator/utils/PNXChunkUtils.java
+index f1aa0df1bf314463504d96e24fa92e6af5bb74c6..45fdd6c5f7f6849f3b067a4c58fdec332b707d2d 100644
+--- a/src/main/java/org/allaymc/jegenerator/utils/PNXChunkUtils.java
++++ b/src/main/java/org/allaymc/jegenerator/utils/PNXChunkUtils.java
+@@ -1,14 +1,13 @@
+ package org.allaymc.jegenerator.utils;
+ 
+ import cn.nukkit.level.format.IChunk;
+-import cn.nukkit.level.format.UnsafeChunk;
+ import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
+ import net.minecraft.core.Holder;
+ import net.minecraft.core.Registry;
+ import net.minecraft.core.registries.Registries;
+ import net.minecraft.server.MinecraftServer;
+-import net.minecraft.tags.FluidTags;
+ import net.minecraft.world.level.biome.Biome;
++import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.chunk.ChunkAccess;
+@@ -40,7 +39,7 @@ public class PNXChunkUtils {
+                     }*/
+ 
+                     final BlockState blockState = input.getBlockState(x, y, z);
+-                    final boolean hasWater = blockState.getFluidState().is(FluidTags.WATER) || (blockState.hasProperty(BlockStateProperties.WATERLOGGED) && blockState.getValue(BlockStateProperties.WATERLOGGED));
++                    final boolean hasWater = !blockState.is(Blocks.WATER) && blockState.hasProperty(BlockStateProperties.WATERLOGGED) && blockState.getValue(BlockStateProperties.WATERLOGGED);
+                     final cn.nukkit.block.BlockState bedrockBlock = MappingRegistries.PNX_BLOCKS.getBedrockBlock(blockState);
+                     output.setBlockState(x, y, z, bedrockBlock, 0);
+                     if (hasWater) {
